@@ -112,6 +112,21 @@ h2 .dot{width:18px;height:18px;border:var(--line);border-radius:50%;flex:none}
 .stay ul{list-style:none;display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .stay .lnk{display:inline-block;margin-top:8px;font-size:.85rem;text-decoration:none;border:2.5px solid var(--ink);border-radius:999px;padding:2px 12px;background:var(--sky)}
 
+
+/* ---------- 路線圖 ---------- */
+.map-card{padding:0;overflow:hidden}
+.map-card svg{display:block;width:100%;height:auto}
+.map-note{font-size:.8rem;opacity:.75;margin-top:8px}
+.sched-title{font-weight:400;font-size:1.1rem;margin:18px 0 10px}
+.sched{padding:6px 14px}
+.srow{display:grid;grid-template-columns:92px 1fr;gap:4px 10px;padding:10px 0;border-bottom:2.5px dashed #d8d2c8;align-items:start}
+.srow:last-child{border-bottom:0}
+.srow .tm{font-variant-numeric:tabular-nums;font-size:.95rem}
+.srow .pl{font-size:.95rem;line-height:1.4}
+.srow .pl small{display:block;font-size:.78rem;opacity:.8}
+.srow .tags{grid-column:2;margin-top:2px}
+.srow.drive{background:transparent}
+
 footer{text-align:center;font-size:.8rem;opacity:.75;padding:30px 0 40px}
 
 /* ---------- 插圖動畫 ---------- */
@@ -149,6 +164,7 @@ footer{text-align:center;font-size:.8rem;opacity:.75;padding:30px 0 40px}
     </span>
     <a class="lk" href="#home">首頁</a>
     <a class="lk" href="#flight">交通</a>
+    <a class="lk" href="#route">路線</a>
     <a class="lk" href="#days">行程</a>
     <a class="lk" href="#todo">清單</a>
     <a class="lk" href="#stay">租車</a>
@@ -262,6 +278,118 @@ footer{text-align:center;font-size:.8rem;opacity:.75;padding:30px 0 40px}
       <div class="meta"><span>有停新竹</span><span>約 1 小時 23 分</span></div>
     </article>
   </div>
+</section>
+
+<!-- 路線圖 -->
+<section id="route">
+  <h2><span class="dot" style="background:var(--green)"></span>路線圖</h2>
+  <div class="card map-card">
+    <svg id="routeMap" viewBox="0 0 360 392" role="img" aria-label="台東一日路線圖：高鐵從新竹到左營，開車經枋寮、南迴公路到多良車站，再到台東市區、小野柳與加路蘭，晚上原路開回左營" stroke="#3E3A39" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" font-family="Huninn,sans-serif">
+      <!-- 海 -->
+      <rect x="0" y="0" width="360" height="392" fill="#A8D3E6" stroke="none"/>
+      <!-- 陸地（南台灣） -->
+      <path d="M0 0 H332 L330 30 L326 55 L311 92 L279 123 L263 178 L249 240 L241 277 L228 339 L215 392 H151 L129 327 L100 296 L62 246 L26 154 L23 30 L0 30Z" fill="#B9DAA5"/>
+      <!-- 中央山脈 -->
+      <g fill="#FFFCF6" stroke-width="2.5">
+        <path d="M176 210 L192 184 L208 210Z"/><path d="M198 206 L216 176 L232 206Z"/>
+        <path d="M150 300 L166 272 L182 300Z"/><path d="M172 296 L188 268 L204 296Z"/>
+      </g>
+      <text x="190" y="226" font-size="9" fill="#3E3A39" stroke="none" text-anchor="middle">中央山脈</text>
+      <!-- 海名 -->
+      <text x="300" y="300" font-size="12" fill="#3E3A39" stroke="none" text-anchor="middle" opacity=".7">太平洋</text>
+      <text x="40" y="300" font-size="11" fill="#3E3A39" stroke="none" text-anchor="middle" opacity=".7">台灣海峽</text>
+      <!-- 指北 -->
+      <g transform="translate(344 372)"><path d="M0 -12 L5 4 L0 0 L-5 4Z" fill="#F2A497"/><text x="0" y="14" font-size="8" text-anchor="middle" fill="#3E3A39" stroke="none">N</text></g>
+
+      <!-- 高鐵 -->
+      <line x1="38" y1="131" x2="38" y2="10" stroke="#FFFFFF" stroke-width="7"/>
+      <line x1="38" y1="131" x2="38" y2="10" stroke-dasharray="2 6" stroke-width="3"/>
+      <path d="M32 18 L38 8 L44 18" fill="none" stroke-width="3"/>
+      <g font-size="10.5" fill="#3E3A39" stroke="none">
+        <rect x="46" y="14" width="98" height="60" rx="10" fill="#FFFFFF" stroke="#3E3A39" stroke-width="2.5"/>
+        <text x="54" y="31" font-size="11.5">高鐵↕新竹</text>
+        <text x="54" y="48">去 07:27→08:50</text>
+        <text x="54" y="64">回 21:05→22:28</text>
+      </g>
+
+      <!-- 開車路線 -->
+      <path id="routePath" d="M38 131 C44 170 52 215 70 250 C88 285 110 310 129 327 C160 340 200 342 228 336 C238 310 244 270 247 240 C252 210 262 180 272 150 C282 122 294 104 305 90" fill="none" stroke="#FFFFFF" stroke-width="8"/>
+      <path d="M38 131 C44 170 52 215 70 250 C88 285 110 310 129 327 C160 340 200 342 228 336 C238 310 244 270 247 240 C252 210 262 180 272 150 C282 122 294 104 305 90" fill="none" stroke="#F2A497" stroke-width="3" stroke-dasharray="7 6"/>
+      <path d="M305 90 L322 64 L323 56" fill="none" stroke="#FFFFFF" stroke-width="7"/>
+      <path d="M305 90 L322 64 L323 56" fill="none" stroke="#F2A497" stroke-width="3" stroke-dasharray="4 5"/>
+
+      <!-- 小車 -->
+      <g id="mapCar">
+        <g transform="translate(-11 -7)">
+          <path d="M0 11 V6 Q0 3 3 3 H6 L10 -1 H17 L20 3 H20 Q22 3 22 6 V11Z" fill="#F6D27A" stroke-width="2"/>
+          <circle cx="6" cy="12" r="2.6" fill="#FFFFFF" stroke-width="2"/><circle cx="17" cy="12" r="2.6" fill="#FFFFFF" stroke-width="2"/>
+        </g>
+        <animateMotion dur="14s" repeatCount="indefinite" rotate="0" keyPoints="0;1" keyTimes="0;1" calcMode="linear"><mpath href="#routePath"/></animateMotion>
+      </g>
+
+      <!-- 地名小點 -->
+      <g font-size="9" fill="#3E3A39" stroke="none">
+        <circle cx="129" cy="327" r="3.5" fill="#FFFFFF" stroke="#3E3A39" stroke-width="2"/><text x="112" y="320" text-anchor="end">枋寮</text>
+        <circle cx="228" cy="336" r="3.5" fill="#FFFFFF" stroke="#3E3A39" stroke-width="2"/><text x="236" y="352">大武</text>
+        <text x="146" y="350">台 9 線南迴公路</text>
+      </g>
+
+      <!-- 連接線 -->
+      <g stroke-width="1.8" stroke-dasharray="3 3" fill="none">
+        <line x1="236" y1="235" x2="247" y2="240"/>
+        <line x1="270" y1="96" x2="296" y2="92"/>
+        <line x1="290" y1="128" x2="305" y2="90"/>
+        <line x1="300" y1="46" x2="320" y2="60"/>
+      </g>
+
+      <!-- 編號標記 -->
+      <g font-size="11" text-anchor="middle" stroke-width="2.5">
+        <g class="pin"><circle cx="38" cy="131" r="10" fill="#F2A497"/><text x="38" y="135" fill="#3E3A39" stroke="none">1</text></g>
+        <g class="pin"><circle cx="247" cy="240" r="10" fill="#F2A497"/><text x="247" y="244" fill="#3E3A39" stroke="none">2</text></g>
+        <g class="pin"><circle cx="305" cy="90" r="10" fill="#F2A497"/><text x="305" y="94" fill="#3E3A39" stroke="none">3</text></g>
+        <g class="pin"><circle cx="323" cy="56" r="10" fill="#F6D27A"/><text x="323" y="60" fill="#3E3A39" stroke="none">4</text></g>
+      </g>
+
+      <!-- 時間卡片 -->
+      <g font-size="10.5" fill="#3E3A39" stroke="none">
+        <rect x="56" y="122" width="100" height="76" rx="10" fill="#FFFFFF" stroke="#3E3A39" stroke-width="2.5"/>
+        <text x="64" y="139" font-size="11.5">① 左營站</text>
+        <text x="64" y="155">09:10 取車出發</text>
+        <text x="64" y="171">20:30 還車</text>
+        <text x="64" y="187">21:05 搭高鐵</text>
+
+        <rect x="128" y="212" width="108" height="44" rx="10" fill="#FFFFFF" stroke="#3E3A39" stroke-width="2.5"/>
+        <text x="136" y="229" font-size="11.5">② 多良車站</text>
+        <text x="136" y="246">11:10–11:50 看海</text>
+
+        <rect x="166" y="76" width="104" height="74" rx="10" fill="#FFFFFF" stroke="#3E3A39" stroke-width="2.5"/>
+        <text x="174" y="93" font-size="11.5">③ 市區吃午餐</text>
+        <text x="174" y="109">12:40 扁食</text>
+        <text x="174" y="124">13:15 麵線</text>
+        <text x="174" y="139">13:50 咖啡</text>
+
+        <rect x="206" y="6" width="94" height="58" rx="10" fill="#FFFFFF" stroke="#3E3A39" stroke-width="2.5"/>
+        <text x="214" y="23" font-size="11.5">④ 東海岸</text>
+        <text x="214" y="39">14:45 小野柳</text>
+        <text x="214" y="55">15:30 加路蘭</text>
+
+        <rect x="290" y="112" width="66" height="78" rx="10" fill="#FFFFFF" stroke="#3E3A39" stroke-width="2.5"/>
+        <text x="297" y="129" font-size="11">③ 回市區</text>
+        <text x="297" y="145" font-size="10">16:10 甜品</text>
+        <text x="297" y="160" font-size="10">16:50 晚餐</text>
+        <text x="297" y="176" font-size="10">17:45 出發</text>
+
+        <rect x="6" y="342" width="122" height="20" rx="10" fill="#F6D27A" stroke="#3E3A39" stroke-width="2"/>
+        <text x="14" y="356" font-size="10">去 09:10 → 11:10 多良</text>
+        <rect x="6" y="366" width="122" height="20" rx="10" fill="#F2A497" stroke="#3E3A39" stroke-width="2"/>
+        <text x="14" y="380" font-size="10">回 17:45 → 20:30 左營</text>
+      </g>
+    </svg>
+  </div>
+  <p class="map-note">示意圖，非實際比例；黃色小車沿開車路線來回跑。</p>
+
+  <h3 class="sched-title">完整時間表</h3>
+  <div class="card sched" id="sched"></div>
 </section>
 
 <!-- 行程 -->
@@ -464,6 +592,45 @@ document.getElementById('stays').innerHTML = STAYS.map(s=>`
       <ul>${s.f.map(x=>`<li class="pill">${x}</li>`).join('')}</ul>
     </div>
   </article>`).join('');
+
+
+/* ---------- 路線圖：減少動態效果時讓小車停在左營 ---------- */
+(function(){
+  const car=document.getElementById('mapCar');
+  if(!car) return;
+  function apply(){
+    const anim=car.querySelector('animateMotion');
+    if(reduce.matches && anim){ anim.remove(); car.setAttribute('transform','translate(38 131)'); }
+  }
+  apply();
+})();
+
+/* ---------- 完整時間表 ---------- */
+const SCHED = [
+  ['07:27 → 08:50','新竹 → 左營','高鐵 0603 次', [['hsr','約 1 小時 23 分']]],
+  ['08:50 – 09:10','高鐵左營站取車','辦手續、檢查車況', [['walk','約 20 分']]],
+  ['09:10 → 11:10','左營 → 多良車站','國 1／國 3 → 台 1 → 枋寮 → 台 9 南迴', [['road','約 2 小時']]],
+  ['11:10 – 11:50','② 多良車站','看海、等火車出隧道', []],
+  ['11:50 → 12:40','多良 → 台東市區','台 9 線往北', [['car','約 50 分']]],
+  ['12:40 – 13:10','③ 媽煮樓扁食','午餐第一站（週日 14:00 收午市）', []],
+  ['13:15 – 13:45','③ 台東客來吃樂','麵線小碗＋綠豆湯', [['car','約 5 分']]],
+  ['13:50 – 14:25','③ Aylangol Art Cafe','在地咖啡＋甜點', [['car','約 5 分']]],
+  ['14:25 → 14:45','市區 → 小野柳','台 11 線往北', [['car','約 20 分']]],
+  ['14:45 – 15:25','④ 小野柳','砂岩海岸散步', []],
+  ['15:30 – 15:50','④ 加路蘭海岸','草地看海、拍照', [['car','約 5 分']]],
+  ['15:50 → 16:10','加路蘭 → 市區','', [['car','約 20 分']]],
+  ['16:10 – 16:45','③ 黑潮甜品屋','刨冰／豆花分著吃', []],
+  ['16:50 – 17:45','③ mita\'ay 晚餐','在地風味套餐', [['car','約 5 分']]],
+  ['17:45 → 20:30','台東 → 左營','台 9 南迴 → 枋寮 → 台 1 → 國道', [['road','約 2 小時 45 分']]],
+  ['20:30 – 20:50','高鐵左營站還車','附近先加滿油', [['car','約 20 分']]],
+  ['21:05 → 22:28','左營 → 新竹','高鐵 0690 次・緩衝約 15 分進站', [['hsr','約 1 小時 23 分']]]
+];
+document.getElementById('sched').innerHTML = SCHED.map(([tm,pl,sm,tags])=>`
+  <div class="srow">
+    <span class="tm">${tm}</span>
+    <span class="pl">${pl}${sm?`<small>${sm}</small>`:''}</span>
+    ${tags.length?`<div class="tags">${tags.map(([k,t])=>`<span class="tg" style="background:${T[k].bg}"><i aria-hidden="true">${T[k].icon}</i>${T[k].label}・${t}</span>`).join('')}</div>`:''}
+  </div>`).join('');
 
 /* ---------- 選單高亮 ---------- */
 const links=[...document.querySelectorAll('.nav a.lk')];
