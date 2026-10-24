@@ -7,6 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Huninn&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" defer></script>
 <style>
 :root{
   --paper:#FFFCF6; --ink:#3E3A39; --coral:#F2A497; --yellow:#F6D27A; --sky:#A8D3E6; --green:#B9DAA5; --white:#FFFFFF;
@@ -126,6 +128,25 @@ h2 .dot{width:18px;height:18px;border:var(--line);border-radius:50%;flex:none}
 .srow .pl small{display:block;font-size:.78rem;opacity:.8}
 .srow .tags{grid-column:2;margin-top:2px}
 .srow.drive{background:transparent}
+
+/* ---------- 真實地圖 ---------- */
+.real-map{height:360px;padding:0;overflow:hidden;position:relative;z-index:0}
+.real-map .fail{padding:20px;font-size:.9rem}
+.mk{width:28px;height:28px;border:3px solid #3E3A39;border-radius:50%;background:#F2A497;display:grid;place-items:center;font-family:"Huninn",sans-serif;font-size:13px;color:#3E3A39;box-shadow:0 2px 0 #3E3A39}
+.mk.hsr{background:#A8D3E6}.mk.sea{background:#F6D27A}
+.leaflet-popup-content{font-family:"Huninn",system-ui,sans-serif;color:#3E3A39;margin:12px 14px;font-size:13px;line-height:1.5}
+.leaflet-popup-content b{font-weight:400;font-size:15px;display:block}
+.leaflet-popup-content-wrapper{border:3px solid #3E3A39;border-radius:16px;box-shadow:0 3px 0 #3E3A39}
+.pop-nav{display:inline-block;margin-top:6px;padding:2px 10px;border:2.5px solid #3E3A39;border-radius:999px;background:#A8D3E6;color:#3E3A39!important;text-decoration:none}
+.navs{display:grid;gap:10px;margin-top:12px}
+.navbtn{display:flex;align-items:center;gap:10px;text-decoration:none;padding:10px 14px;border:3px solid var(--ink);border-radius:18px;background:var(--white);box-shadow:0 3px 0 var(--ink)}
+.navbtn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
+.navbtn .no{flex:none;width:30px;height:30px;border:2.5px solid var(--ink);border-radius:50%;display:grid;place-items:center;background:var(--yellow);font-size:.9rem}
+.navbtn .tx{flex:1;font-size:.95rem;line-height:1.35}
+.navbtn .tx small{display:block;font-size:.78rem;opacity:.8}
+.navbtn .go{flex:none;font-size:.8rem;border:2.5px solid var(--ink);border-radius:999px;padding:1px 9px;background:var(--sky)}
+.stopnav{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.stopnav a{text-decoration:none;font-size:.82rem;border:2.5px solid var(--ink);border-radius:999px;padding:3px 10px;background:var(--white)}
 
 footer{text-align:center;font-size:.8rem;opacity:.75;padding:30px 0 40px}
 
@@ -388,6 +409,16 @@ footer{text-align:center;font-size:.8rem;opacity:.75;padding:30px 0 40px}
   </div>
   <p class="map-note">示意圖，非實際比例；黃色小車沿開車路線來回跑。</p>
 
+
+  <h3 class="sched-title">真實地圖</h3>
+  <div class="card real-map" id="realMap" role="region" aria-label="可縮放的真實地圖"></div>
+  <p class="map-note">可縮放、拖拉；點編號看時間並開啟 Google 導航。藍線為大致路線，實際依導航為準。</p>
+
+  <h3 class="sched-title">Google 地圖分段導航</h3>
+  <p class="map-note" style="margin-top:0">手機版 Google 地圖每段最多 3 個中途點，所以拆成 4 段；到一段終點再點下一段。</p>
+  <div class="navs" id="navSegs"></div>
+  <div class="stopnav" id="stopNav" aria-label="單站導航"></div>
+
   <h3 class="sched-title">完整時間表</h3>
   <div class="card sched" id="sched"></div>
 </section>
@@ -631,6 +662,79 @@ document.getElementById('sched').innerHTML = SCHED.map(([tm,pl,sm,tags])=>`
     <span class="pl">${pl}${sm?`<small>${sm}</small>`:''}</span>
     ${tags.length?`<div class="tags">${tags.map(([k,t])=>`<span class="tg" style="background:${T[k].bg}"><i aria-hidden="true">${T[k].icon}</i>${T[k].label}・${t}</span>`).join('')}</div>`:''}
   </div>`).join('');
+
+
+/* ---------- Google 地圖連結 ---------- */
+const P = {
+  zy:  {n:'高鐵左營站', q:'台灣高鐵左營站', id:'ChIJVXhMJCsFbjQR9-DVjEq6Ah0', ll:[22.6873108,120.307356]},
+  dl:  {n:'多良車站', q:'多良車站', id:'ChIJqza3KrrTbzQRv2vJUxBEm24', ll:[22.5075195,120.9588487]},
+  mz:  {n:'媽煮樓扁食', q:'媽煮樓扁食', id:'ChIJdVa42nu5bzQRLvgZbi8lsg4', ll:[22.7573347,121.1435415]},
+  kl:  {n:'台東客來吃樂', q:'台東客來吃樂', id:'ChIJTSs5txW5bzQRGZX_u1cA9Vs', ll:[22.7545696,121.1459322]},
+  ay:  {n:'Aylangol Art Cafe', q:'Aylangol Art Cafe 台東', id:'ChIJzaA6t525bzQR4ZvdkzeREv8', ll:[22.7641712,121.1503239]},
+  xy:  {n:'小野柳', q:'小野柳', id:'ChIJgS3U1LG5bzQRGuFTr11jV4A', ll:[22.7947736,121.1981802]},
+  jl:  {n:'加路蘭', q:'加路蘭遊憩區', id:'ChIJi-zWAl-8bzQROFZaLJml4oo', ll:[22.8063665,121.1969974]},
+  hc:  {n:'黑潮甜品屋', q:'黑潮甜品屋 台東', id:'ChIJ2_COIkG5bzQRS91sGsBqGBs', ll:[22.7534507,121.1521334]},
+  mt:  {n:"mita'ay", q:"mita'ay 台東", id:'ChIJIXPzKi-5bzQR0YMDvvf6dMg', ll:[22.7527547,121.1470006]}
+};
+function gdir(o, d, way){
+  const e = encodeURIComponent;
+  let u = 'https://www.google.com/maps/dir/?api=1&travelmode=driving';
+  if(o) u += `&origin=${e(P[o].q)}&origin_place_id=${P[o].id}`;
+  u += `&destination=${e(P[d].q)}&destination_place_id=${P[d].id}`;
+  if(way && way.length){
+    u += `&waypoints=${e(way.map(k=>P[k].q).join('|'))}&waypoint_place_ids=${e(way.map(k=>P[k].id).join('|'))}`;
+  }
+  return u;
+}
+const SEGS = [
+  {t:'09:10', n:'左營 → 多良車站', s:'去程南迴，約 2 小時', o:'zy', d:'dl', w:[]},
+  {t:'11:50', n:'多良 → 扁食 → 麵線 → 咖啡', s:'台東市區午餐，約 1 小時含用餐移動', o:'dl', d:'ay', w:['mz','kl']},
+  {t:'14:25', n:'咖啡 → 小野柳 → 加路蘭 → 甜品 → 晚餐', s:'東海岸繞一圈回市區', o:'ay', d:'mt', w:['xy','jl','hc']},
+  {t:'17:45', n:'mita\'ay → 左營站', s:'回程南迴，約 2 小時 45 分', o:'mt', d:'zy', w:[]}
+];
+document.getElementById('navSegs').innerHTML = SEGS.map((s,i)=>`
+  <a class="navbtn" href="${gdir(s.o,s.d,s.w)}" target="_blank" rel="noopener">
+    <span class="no">${i+1}</span>
+    <span class="tx">${s.t}　${s.n}<small>${s.s}</small></span>
+    <span class="go">導航</span>
+  </a>`).join('');
+const ORDER = ['zy','dl','mz','kl','ay','xy','jl','hc','mt'];
+document.getElementById('stopNav').innerHTML = ORDER.map((k,i)=>`<a href="${gdir(null,k)}" target="_blank" rel="noopener">${i+1}. ${P[k].n}</a>`).join('');
+
+/* ---------- 真實地圖（Leaflet + OpenStreetMap） ---------- */
+window.addEventListener('load', function(){
+  const box = document.getElementById('realMap');
+  if(!window.L){ box.innerHTML = '<p class="fail">地圖載入失敗，請直接用下方的 Google 地圖導航按鈕。</p>'; return; }
+  const map = L.map(box, {scrollWheelZoom:false, zoomAnimation:!reduce.matches, fadeAnimation:!reduce.matches, markerZoomAnimation:!reduce.matches});
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:18, attribution:'&copy; OpenStreetMap contributors'}).addTo(map);
+  // 大致開車路線（左營 → 國道／台88 → 枋寮 → 南迴台9 → 多良 → 台東）
+  const road = [[22.6873,120.3074],[22.665,120.40],[22.64,120.47],[22.55,120.53],[22.45,120.57],[22.367,120.593],[22.29,120.63],[22.20,120.70],[22.24,120.78],[22.29,120.84],[22.34,120.88],[22.40,120.91],[22.46,120.94],[22.5075,120.9588],[22.56,120.98],[22.615,121.005],[22.66,121.03],[22.70,121.06],[22.735,121.10],[22.7573,121.1435]];
+  L.polyline(road,{color:'#3E3A39',weight:8,opacity:.9}).addTo(map);
+  L.polyline(road,{color:'#A8D3E6',weight:4.5}).addTo(map);
+  const coast=[[22.7573,121.1435],[22.775,121.17],[22.7948,121.1982],[22.8064,121.197]];
+  L.polyline(coast,{color:'#3E3A39',weight:7,opacity:.9}).addTo(map);
+  L.polyline(coast,{color:'#F6D27A',weight:4}).addTo(map);
+  const INFO = {
+    zy:['09:10 取車出發｜20:30 還車','高鐵 07:27→08:50 到、21:05→22:28 回新竹','hsr'],
+    dl:['11:10 – 11:50','看海、等火車出隧道',''],
+    mz:['12:40 午餐','週日 14:00 收午市',''],
+    kl:['13:15','蚵仔大腸麵線＋綠豆湯',''],
+    ay:['13:50 – 14:25','在地咖啡＋甜點',''],
+    xy:['14:45 – 15:25','砂岩海岸散步','sea'],
+    jl:['15:30 – 15:50','草地看海','sea'],
+    hc:['16:10 – 16:45','刨冰／豆花',''],
+    mt:['16:50 – 17:45 晚餐','17:45 準時出發回左營','']
+  };
+  const pts=[];
+  ORDER.forEach((k,i)=>{
+    const p=P[k], inf=INFO[k];
+    const icon=L.divIcon({className:'', html:`<div class="mk ${inf[2]}">${i+1}</div>`, iconSize:[28,28], iconAnchor:[14,14], popupAnchor:[0,-14]});
+    L.marker(p.ll,{icon, title:p.n, keyboard:true}).addTo(map)
+      .bindPopup(`<b>${i+1}. ${p.n}</b>${inf[0]}<br>${inf[1]}<br><a class="pop-nav" href="${gdir(null,k)}" target="_blank" rel="noopener">Google 導航</a>`);
+    pts.push(p.ll);
+  });
+  map.fitBounds(L.latLngBounds(pts).pad(0.08));
+});
 
 /* ---------- 選單高亮 ---------- */
 const links=[...document.querySelectorAll('.nav a.lk')];
