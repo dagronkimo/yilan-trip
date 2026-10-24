@@ -148,6 +148,27 @@ h2 .dot{width:18px;height:18px;border:var(--line);border-radius:50%;flex:none}
 .stopnav{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 .stopnav a{text-decoration:none;font-size:.82rem;border:2.5px solid var(--ink);border-radius:999px;padding:3px 10px;background:var(--white)}
 
+/* ---------- 口袋名單 ---------- */
+.pk-note{font-size:.85rem;opacity:.85;margin:-4px 0 12px}
+.pk-tabs{display:flex;gap:8px;margin-bottom:12px}
+.pk-tab{flex:1;font-family:inherit;color:var(--ink);background:var(--white);border:var(--line);border-radius:16px;padding:7px 4px;cursor:pointer;box-shadow:0 3px 0 var(--ink);font-size:.95rem}
+.pk-tab[aria-selected="true"]{background:var(--yellow);transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
+.pk-filter{display:flex;align-items:center;gap:8px;font-size:.85rem;margin-bottom:10px;cursor:pointer}
+.pk-filter input{width:18px;height:18px;accent-color:#F2A497}
+.pk-list{display:grid;gap:10px}
+.pk{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:center;padding:10px 12px}
+.pk .rk{width:34px;height:34px;border:2.5px solid var(--ink);border-radius:50%;display:grid;place-items:center;background:var(--paper);font-size:.9rem}
+.pk:nth-child(-n+3) .rk{background:var(--coral)}
+.pk .nm{font-size:1rem;line-height:1.35}
+.pk .meta{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px;font-size:.74rem;align-items:center}
+.pk .meta span{border:2px solid var(--ink);border-radius:999px;padding:0 7px;background:var(--white)}
+.pk .meta .open{background:var(--green)}
+.pk .meta .closed{background:var(--coral)}
+.pk .meta .in{background:var(--yellow)}
+.pk .meta .way{background:var(--sky)}
+.pk .pk-go{text-decoration:none;font-size:.8rem;border:2.5px solid var(--ink);border-radius:999px;padding:3px 10px;background:var(--sky);white-space:nowrap}
+.pk.off{opacity:.55}
+
 footer{text-align:center;font-size:.8rem;opacity:.75;padding:30px 0 40px}
 
 /* ---------- 插圖動畫 ---------- */
@@ -187,6 +208,7 @@ footer{text-align:center;font-size:.8rem;opacity:.75;padding:30px 0 40px}
     <a class="lk" href="#flight">交通</a>
     <a class="lk" href="#route">路線</a>
     <a class="lk" href="#days">行程</a>
+    <a class="lk" href="#pocket">口袋名單</a>
     <a class="lk" href="#todo">清單</a>
     <a class="lk" href="#stay">租車</a>
   </div>
@@ -429,6 +451,20 @@ footer{text-align:center;font-size:.8rem;opacity:.75;padding:30px 0 40px}
   <div class="tabs" role="tablist" aria-label="選擇時段" id="tabs"></div>
   <div class="legend" id="legend" aria-label="交通標籤說明"></div>
   <div id="dayPanel" role="tabpanel" aria-live="polite"></div>
+</section>
+
+<!-- 口袋名單 -->
+<section id="pocket">
+  <h2><span class="dot" style="background:var(--yellow)"></span>口袋名單</h2>
+  <p class="pk-note">Google 4.3 分以上、依評論數排序的前 20 名，臨時想換店直接點「導航」。營業時間為週日。</p>
+  <div class="pk-tabs" role="tablist" aria-label="名單分類">
+    <button class="pk-tab" role="tab" aria-selected="true" data-k="snack">小吃・甜點</button>
+    <button class="pk-tab" role="tab" aria-selected="false" data-k="rest">餐廳・咖啡</button>
+    <button class="pk-tab" role="tab" aria-selected="false" data-k="spot">景點</button>
+  </div>
+  <label class="pk-filter"><input type="checkbox" id="pkSun">只看週日有營業</label>
+  <div class="pk-list" id="pkList" role="tabpanel" aria-live="polite"></div>
+  <p class="map-note">行程中的黑潮甜品屋（4.9，129 則）和多良車站（4.1）不在名單門檻內，仍保留在行程。藍蜻蜓炸雞、林記臭豆腐、榕樹下米苔目等老店低於 4.3 分未列入。時間為「距台東市區約」的估算車程。</p>
 </section>
 
 <!-- 待辦 -->
@@ -735,6 +771,40 @@ window.addEventListener('load', function(){
   });
   map.fitBounds(L.latLngBounds(pts).pad(0.08));
 });
+
+
+/* ---------- 口袋名單 ---------- */
+const POCKET = {"snack": [{"n": "台東客來吃樂", "id": "ChIJTSs5txW5bzQRGZX_u1cA9Vs", "r": 4.5, "c": 3915, "area": "台東市", "min": 5, "h": "10:00–20:00", "itin": true, "way": false}, {"n": "寶桑豆花", "id": "ChIJ7aP3jDi5bzQREuVXoUd_qs0", "r": 4.5, "c": 3051, "area": "台東市", "min": 5, "h": "13:00–21:10", "itin": false, "way": false}, {"n": "阿咪米苔目", "id": "ChIJpWgClji5bzQROx5Ndw6fmAs", "r": 4.4, "c": 2926, "area": "台東市", "min": 5, "h": "07:30–15:00、17:00–20:30", "itin": false, "way": false}, {"n": "Chu Breakfast 早餐", "id": "ChIJ8yOw4BS5bzQRLHhwhy0xssg", "r": 4.6, "c": 1921, "area": "台東市", "min": 5, "h": "06:00–13:30", "itin": false, "way": false}, {"n": "Asan 阿三刨冰", "id": "ChIJLYHbVj65bzQRizd0BWa_yeg", "r": 4.6, "c": 1786, "area": "台東市", "min": 5, "h": "09:00–18:00", "itin": false, "way": false}, {"n": "大伯豆花", "id": "ChIJn3eIJA25bzQRl8qwSep2hXU", "r": 4.7, "c": 816, "area": "台東市", "min": 5, "h": "12:00–21:00", "itin": false, "way": false}, {"n": "麵線糊了 台東店", "id": "ChIJQRg9sTC5bzQRHTHqYXKcupc", "r": 4.8, "c": 753, "area": "台東市", "min": 5, "h": "06:30–19:00", "itin": false, "way": false}, {"n": "濟州冰菓", "id": "ChIJQZPhiz65bzQR4Kfz8-ir7MM", "r": 4.4, "c": 710, "area": "台東市", "min": 5, "h": "12:00–21:30", "itin": false, "way": false}, {"n": "NiHau 台式甜品", "id": "ChIJpzJqmYu5bzQRYnmLGVj7rKI", "r": 4.5, "c": 705, "area": "台東市", "min": 5, "h": "11:00–18:00", "itin": false, "way": false}, {"n": "昱禎臭豆腐", "id": "ChIJL5GgCxO5bzQRuwrgFrPpRuc", "r": 4.5, "c": 646, "area": "台東市", "min": 5, "h": "15:00–22:30", "itin": false, "way": false}, {"n": "劉媽媽古早味", "id": "ChIJy4Zvzg-5bzQRO2iQNP9bXCs", "r": 4.4, "c": 629, "area": "台東市", "min": 5, "h": "公休", "itin": false, "way": false}, {"n": "壹加壹蛋餅", "id": "ChIJ2yD6TQO5bzQRl7wjuvRB_kU", "r": 4.6, "c": 586, "area": "台東市", "min": 5, "h": "06:00–11:00", "itin": false, "way": false}, {"n": "阿憲冰店", "id": "ChIJCUuUGz65bzQRpy_gGFXnToM", "r": 4.4, "c": 567, "area": "台東市", "min": 5, "h": "15:00–22:00", "itin": false, "way": false}, {"n": "布魯蛋餅坊", "id": "ChIJGamd_Q65bzQRJyJUR4IoARc", "r": 4.5, "c": 560, "area": "台東市", "min": 5, "h": "06:00–11:00", "itin": false, "way": false}, {"n": "小莊米苔目（知本）", "id": "ChIJYW6MA-vJbzQRTfgxDoLKs6I", "r": 4.8, "c": 408, "area": "台東市", "min": 20, "h": "08:00–18:00", "itin": false, "way": false}, {"n": "Fried Chicken Master 炸雞", "id": "ChIJu1tyVMC5bzQRd30_EUqlvO8", "r": 4.7, "c": 356, "area": "台東市", "min": 5, "h": "11:00–01:00", "itin": false, "way": false}, {"n": "傳承手工蛋餅坊", "id": "ChIJdYTJRbC5bzQRpicK4Ir04a8", "r": 4.5, "c": 318, "area": "台東市", "min": 5, "h": "公休", "itin": false, "way": false}, {"n": "媽煮樓扁食", "id": "ChIJdVa42nu5bzQRLvgZbi8lsg4", "r": 4.6, "c": 216, "area": "台東市", "min": 5, "h": "11:00–14:00、17:00–20:00", "itin": true, "way": false}, {"n": "東味肉圓", "id": "ChIJ61DTZRW5bzQR6MXwf5kfWWw", "r": 4.6, "c": 207, "area": "台東市", "min": 5, "h": "11:30–18:30", "itin": false, "way": false}, {"n": "冰菓綠洲", "id": "ChIJP9rpzaO5bzQRIYkHIfxnsPg", "r": 4.8, "c": 205, "area": "台東市", "min": 5, "h": "公休", "itin": false, "way": false}], "rest": [{"n": "屋賀爺燒肉", "id": "ChIJ7eeqJ5O5bzQRVVdyOIh6Mo0", "r": 4.9, "c": 12055, "area": "台東市", "min": 5, "h": "11:30–14:30、17:00–24:00", "itin": false, "way": false}, {"n": "長生塩人 拉麵", "id": "ChIJNXoBRCi5bzQR6T0uuJWF4Lw", "r": 4.9, "c": 5511, "area": "台東市", "min": 5, "h": "17:00–24:00", "itin": false, "way": false}, {"n": "葉氏海鮮", "id": "ChIJM-o2i5u5bzQRLn6szad60-0", "r": 4.6, "c": 4317, "area": "台東市", "min": 5, "h": "10:00–20:00", "itin": false, "way": false}, {"n": "MAHI MAHI TODAY 炸魚薯條", "id": "ChIJVai6CHq5bzQRhzyg_SnUKvc", "r": 4.5, "c": 4109, "area": "台東市", "min": 5, "h": "11:30–20:00", "itin": false, "way": false}, {"n": "樂烤和牛 燒烤", "id": "ChIJn2Zuja65bzQRlFVfkgMGt5A", "r": 4.5, "c": 2444, "area": "台東市", "min": 5, "h": "12:00–15:00、17:00–22:30", "itin": false, "way": false}, {"n": "南北餃子館", "id": "ChIJr7rWvj65bzQR8oeRUf1hUng", "r": 4.3, "c": 1904, "area": "台東市", "min": 5, "h": "11:00–14:00、17:00–20:30", "itin": false, "way": false}, {"n": "打鐵火鍋輕燒肉", "id": "ChIJbdThYz-5bzQRjlvzSPxcd00", "r": 4.6, "c": 1837, "area": "台東市", "min": 5, "h": "11:00–14:00、17:00–22:00", "itin": false, "way": false}, {"n": "燒肉MEN", "id": "ChIJif1q2Ua5bzQRaIOogRUBPv0", "r": 4.7, "c": 1827, "area": "台東市", "min": 5, "h": "11:30–23:00", "itin": false, "way": false}, {"n": "萬家鄉 原味料理", "id": "ChIJJ-3YCj-5bzQRmXfqMDtzKSc", "r": 4.3, "c": 1432, "area": "台東市", "min": 5, "h": "11:00–13:30、17:00–19:30", "itin": false, "way": false}, {"n": "Aylangol Art Cafe", "id": "ChIJzaA6t525bzQR4ZvdkzeREv8", "r": 4.9, "c": 1407, "area": "台東市", "min": 5, "h": "09:00–17:00", "itin": true, "way": false}, {"n": "Sam's Burger", "id": "ChIJJVgzuRK5bzQRkAmE4x9P4wY", "r": 4.5, "c": 1400, "area": "台東市", "min": 5, "h": "11:00–14:00、17:00–21:30", "itin": false, "way": false}, {"n": "哈拉麵", "id": "ChIJv4LmtT25bzQRePZwUb-fOh0", "r": 4.7, "c": 1387, "area": "台東市", "min": 5, "h": "11:00–14:00、17:00–20:30", "itin": false, "way": false}, {"n": "茶自點 台東旗艦店", "id": "ChIJO5vZCNu5bzQRrYhieWDL9fE", "r": 4.6, "c": 1346, "area": "台東市", "min": 5, "h": "11:30–20:30", "itin": false, "way": false}, {"n": "壟墨咖啡", "id": "ChIJ9Z2UBnm5bzQR1xN0aERJF7I", "r": 4.5, "c": 1163, "area": "台東市", "min": 5, "h": "10:30–17:30", "itin": false, "way": false}, {"n": "人x人 早午餐", "id": "ChIJnQRyVmq5bzQRdaMUh1wrmiI", "r": 4.5, "c": 1056, "area": "台東市", "min": 5, "h": "08:00–13:00", "itin": false, "way": false}, {"n": "Home's Kitchen 家常菜", "id": "ChIJmYyDFUC5bzQR69T8fe6Q3Cs", "r": 4.5, "c": 1004, "area": "台東市", "min": 5, "h": "11:30–14:00、17:30–20:30", "itin": false, "way": false}, {"n": "阿拉慕廚房", "id": "ChIJZ0zv2de5bzQRLB4SIw2i-Ho", "r": 4.5, "c": 900, "area": "台東市", "min": 5, "h": "11:30–14:30、17:30–21:30", "itin": false, "way": false}, {"n": "連發海產（富岡漁港）", "id": "ChIJo4xPu2q8bzQRtNEiKoiOdE0", "r": 4.5, "c": 845, "area": "台東市", "min": 10, "h": "09:00–16:00", "itin": false, "way": false}, {"n": "mita'ay", "id": "ChIJIXPzKi-5bzQR0YMDvvf6dMg", "r": 4.7, "c": 749, "area": "台東市", "min": 5, "h": "16:00–22:00", "itin": true, "way": false}, {"n": "義回生餓回熟 義大利麵", "id": "ChIJ-7rJKBa5bzQRXOWN1kcTadM", "r": 4.6, "c": 704, "area": "台東市", "min": 5, "h": "11:00–14:30、17:00–22:00", "itin": false, "way": false}], "spot": [{"n": "鹿野高台", "id": "ChIJAQAAADSkbzQR2E5XyomxUJo", "r": 4.5, "c": 27542, "area": "鹿野鄉", "min": 35, "h": "全天", "itin": false, "way": false}, {"n": "台東森林公園（琵琶湖）", "id": "ChIJx9oJH165bzQRHtM1Bkgvyyo", "r": 4.4, "c": 15915, "area": "台東市", "min": 5, "h": "07:00–18:00", "itin": false, "way": false}, {"n": "鐵花村", "id": "ChIJAzKH2hW5bzQRD7rKWL4N5KU", "r": 4.5, "c": 14973, "area": "台東市", "min": 5, "h": "17:00–22:00", "itin": false, "way": false}, {"n": "加路蘭", "id": "ChIJi-zWAl-8bzQROFZaLJml4oo", "r": 4.4, "c": 14607, "area": "台東市", "min": 15, "h": "全天", "itin": true, "way": false}, {"n": "小野柳", "id": "ChIJgS3U1LG5bzQRGuFTr11jV4A", "r": 4.4, "c": 13213, "area": "台東市", "min": 10, "h": "08:30–17:00", "itin": true, "way": false}, {"n": "史前文化博物館", "id": "ChIJgS3U1LG5bzQRAlR1EkfxCn0", "r": 4.5, "c": 10011, "area": "台東市", "min": 10, "h": "09:00–17:00", "itin": false, "way": false}, {"n": "知本國家森林遊樂區", "id": "ChIJz3XTnoHJbzQRPeHfWKc1twg", "r": 4.3, "c": 7544, "area": "卑南鄉", "min": 30, "h": "07:30–17:30", "itin": false, "way": false}, {"n": "台東海濱公園", "id": "ChIJw6tsODq5bzQRW_0HkVz6MSE", "r": 4.3, "c": 6877, "area": "台東市", "min": 5, "h": "全天", "itin": false, "way": false}, {"n": "活水湖", "id": "ChIJ7XzyAE25bzQRHMT043RH2cA", "r": 4.5, "c": 6589, "area": "台東市", "min": 5, "h": "09:00–18:00", "itin": false, "way": false}, {"n": "台東美術館", "id": "ChIJ4VPy9UG5bzQREpsTt1LXMQc", "r": 4.4, "c": 4691, "area": "台東市", "min": 5, "h": "09:00–12:00、13:30–17:00", "itin": false, "way": false}, {"n": "華源海灣", "id": "ChIJeQoYaRzJbzQRx6STU09tf1U", "r": 4.3, "c": 4485, "area": "太麻里鄉", "min": 30, "h": "全天", "itin": false, "way": true}, {"n": "紅葉谷綠能溫泉園區", "id": "ChIJm11uOBGvbzQRV0W9oy9g744", "r": 4.9, "c": 3852, "area": "延平鄉", "min": 30, "h": "11:00–21:00", "itin": false, "way": false}, {"n": "卑南遺址公園", "id": "ChIJi7Rd8S66bzQROY9pSA3h5S8", "r": 4.5, "c": 2691, "area": "台東市", "min": 10, "h": "09:00–17:00", "itin": false, "way": false}, {"n": "金崙海灘", "id": "ChIJGZdpwDnSbzQRPoaNqxUB5c4", "r": 4.5, "c": 2459, "area": "太麻里鄉", "min": 55, "h": "全天", "itin": false, "way": true}, {"n": "台東天后宮", "id": "ChIJl1xdb0e5bzQRMhZeUtJeuEU", "r": 4.7, "c": 2444, "area": "台東市", "min": 5, "h": "06:00–22:00", "itin": false, "way": false}, {"n": "熊都蘭文創園區", "id": "ChIJY_tBD_GibzQR4bltSKh7MHU", "r": 4.4, "c": 1635, "area": "東河鄉", "min": 30, "h": "09:00–17:00", "itin": false, "way": false}, {"n": "知本林道白龍瀑布", "id": "ChIJh9J9F8HJbzQRkWzvvKbwovg", "r": 4.5, "c": 1255, "area": "卑南鄉", "min": 25, "h": "全天", "itin": false, "way": false}, {"n": "金崙觀景台", "id": "ChIJFXlzUkzTbzQRTqiu1BcC0JQ", "r": 4.6, "c": 674, "area": "太麻里鄉", "min": 55, "h": "全天", "itin": false, "way": true}, {"n": "都蘭觀景台", "id": "ChIJd4jHXhyjbzQR9hr14i8NNWE", "r": 4.4, "c": 652, "area": "東河鄉", "min": 30, "h": "全天", "itin": false, "way": false}, {"n": "微光集 夜間市集", "id": "ChIJhx9sW1a5bzQRQ2GYN3cMBAo", "r": 4.9, "c": 599, "area": "台東市", "min": 5, "h": "17:00–22:00", "itin": false, "way": false}]};
+(function(){
+  const list=document.getElementById('pkList'), sunOnly=document.getElementById('pkSun');
+  let cur='snack';
+  function navUrl(x){return `https://www.google.com/maps/dir/?api=1&travelmode=driving&destination=${encodeURIComponent(x.n)}&destination_place_id=${x.id}`;}
+  function render(anim){
+    const rows=POCKET[cur].filter(x=>!sunOnly.checked || x.h!=='公休');
+    list.innerHTML=rows.map((x)=>{
+      const rank=POCKET[cur].indexOf(x)+1;
+      const closed=x.h==='公休';
+      return `<div class="card pk${closed?' off':''}">
+        <span class="rk">${rank}</span>
+        <div><div class="nm">${x.n}</div>
+          <div class="meta">
+            <span>★${x.r}・${x.c.toLocaleString()} 則</span>
+            <span class="${closed?'closed':'open'}">週日 ${x.h}</span>
+            <span>${x.area}・市區約 ${x.min} 分</span>
+            ${x.itin?'<span class="in">已在行程</span>':''}
+            ${x.way?'<span class="way">南迴順路</span>':''}
+          </div></div>
+        <a class="pk-go" href="${navUrl(x)}" target="_blank" rel="noopener">導航</a>
+      </div>`;}).join('');
+    if(anim && !reduce.matches){ list.querySelectorAll('.pk').forEach((el,i)=>{el.style.animationDelay=(i*30)+'ms';el.classList.add('pop');}); }
+  }
+  document.querySelectorAll('.pk-tab').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('.pk-tab').forEach(t=>t.setAttribute('aria-selected',t===b));
+    cur=b.dataset.k; render(true);
+  }));
+  sunOnly.addEventListener('change',()=>render(false));
+  render(false);
+})();
 
 /* ---------- 選單高亮 ---------- */
 const links=[...document.querySelectorAll('.nav a.lk')];
