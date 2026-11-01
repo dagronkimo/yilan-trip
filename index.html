@@ -204,6 +204,18 @@ h2 .dot{width:18px;height:18px;border:var(--line);border-radius:50%;flex:none}
 .help .ic-btn.demo{width:26px;height:26px;font-size:.85rem}
 .help .warn{padding:0 6px}
 
+/* ---------- 景點地圖 ---------- */
+.sm-card{padding:6px 4px 10px;margin-bottom:14px;overflow:hidden}
+.sm-card svg{display:block;width:100%;height:auto}
+.sm-legend{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:.82rem;margin-bottom:10px}
+.sm-legend span{display:inline-flex;align-items:center;gap:5px}
+.sm-legend i{width:14px;height:14px;border:2px solid var(--ink);border-radius:50%;display:inline-block}
+.sm-lab{cursor:pointer}
+.sm-lab:hover rect,.sm-lab:focus-visible rect{stroke-width:3}
+.sm-lab:focus{outline:none}
+.sm-lab:focus-visible rect{stroke-dasharray:4 3}
+.sm-lab.gone{opacity:.45}
+
 footer{text-align:center;font-size:.8rem;opacity:.75;padding:30px 0 40px}
 
 /* ---------- 插圖動畫 ---------- */
@@ -241,6 +253,7 @@ footer{text-align:center;font-size:.8rem;opacity:.75;padding:30px 0 40px}
     </span>
     <a class="lk" href="#home">首頁</a>
     <a class="lk" href="#flight">交通</a>
+    <a class="lk" href="#spotmap">景點地圖</a>
     <a class="lk" href="#route">路線</a>
     <a class="lk" href="#days">行程</a>
     <a class="lk" href="#pocket">口袋名單</a>
@@ -356,6 +369,18 @@ footer{text-align:center;font-size:.8rem;opacity:.75;padding:30px 0 40px}
       <div class="meta"><span>有停新竹</span><span>約 1 小時 23 分</span></div>
     </article>
   </div>
+</section>
+
+<!-- 景點地圖 -->
+<section id="spotmap">
+  <h2><span class="dot" style="background:var(--green)"></span>台東高分景點地圖</h2>
+  <p class="pk-note">從 Google 4.4 分以上、評論多的店家和景點精選 26 處（多良車站 4.1 分，已在行程中保留）。<b>點名稱就能加入或移出「我的行程」</b>，黃底打 ✓ 的是已在行程裡的點。</p>
+  <div class="sm-legend">
+    <span><i style="background:#B9DAA5"></i>景點</span><span><i style="background:#F2A497"></i>美食</span><span><i style="background:#F6D27A"></i>咖啡甜點</span><span><i style="background:#F6D27A;border-radius:6px"></i>✓ 已在行程</span>
+  </div>
+  <div class="card sm-card" id="smCounty"></div>
+  <div class="card sm-card" id="smCity"></div>
+  <p class="map-note">位置示意，非導航比例圖；評分與評論數為 2026 年 10 月 Google 資料。星號後為評論數（萬＝一萬則）。</p>
 </section>
 
 <!-- 路線圖 -->
@@ -535,7 +560,7 @@ footer{text-align:center;font-size:.8rem;opacity:.75;padding:30px 0 40px}
 </section>
 
 <footer>
-  <span class="ver" style="display:inline-block;border:2px solid #3E3A39;border-radius:999px;padding:0 10px;margin-bottom:6px;background:#FFFFFF">版本 2026/10/24 23:30・台東一日・可編輯版</span><br>
+  <span class="ver" style="display:inline-block;border:2px solid #3E3A39;border-radius:999px;padding:0 10px;margin-bottom:6px;background:#FFFFFF">版本 2026/11/01・台東一日・景點地圖版</span><br>
   景點與店家皆為 Google 地圖評分 4.1 以上（多良車站 4.1，其餘 4.2 以上）（2026 年 10 月資料）<br>
   高鐵班次依交通小幫手 2026 時刻表，店家營業時間可能變動，出發前請再確認
 </footer>
@@ -709,7 +734,7 @@ function renderDay(animate){
 }
 function changed(msg, animate){
   save(PLAN_KEY, plan);
-  renderDay(animate); renderPocket(false); renderNav(); renderSched(); drawMap();
+  renderDay(animate); renderPocket(false); renderNav(); renderSched(); drawMap(); if(typeof renderSpotMap==='function') renderSpotMap();
   if(msg) live.textContent = msg;
 }
 panel.addEventListener('click', e=>{
@@ -781,7 +806,7 @@ pkList.addEventListener('click', e=>{
   const id=b.dataset.id, x=POOL[id];
   if(b.dataset.act==='seen'){
     if(seen.has(id)) seen.delete(id); else seen.add(id);
-    save(SEEN_KEY,[...seen]); renderPocket(false);
+    save(SEEN_KEY,[...seen]); renderPocket(false); renderSpotMap();
     live.textContent = seen.has(id) ? `${x.n} 標記為去過` : `${x.n} 取消去過`;
   }
   if(b.dataset.act==='add'){ plan.stops.push({id, stay:stayOf(x)}); changed(`${x.n} 已加入行程，時間已重算（可按「自動排順序」）`, true); }
@@ -869,6 +894,143 @@ window.addEventListener('load', function(){
 })();
 
 renderDay(false); renderPocket(false); renderNav(); renderSched();
+
+/* ---------- 景點地圖（插畫風、點名稱加入行程） ---------- */
+const SPOTMAP = {
+  county: {
+    title:'台東縣總覽', bounds:{n:22.945, s:22.48, w:120.90, e:121.275},
+    items:[
+      ['鹿野高台','鹿野高台','熱氣球草原'],
+      ['紅葉谷綠能溫泉園區','紅葉谷溫泉','溫泉泡腳'],
+      ['卑南遺址公園','卑南遺址公園','史前遺址'],
+      ['史前文化博物館','史前館','博物館・室內'],
+      ['知本林道白龍瀑布','白龍瀑布','林道瀑布'],
+      ['知本國家森林遊樂區','知本森林','森林步道'],
+      ['熊都蘭文創園區','熊都蘭文創','都蘭糖廠'],
+      ['加路蘭','加路蘭','海岸草地'],
+      ['小野柳','小野柳','奇岩海岸'],
+      ['華源海灣','華源海灣','心型海灣'],
+      ['金崙海灘','金崙海灘','南迴黑沙灘'],
+      ['多良車站','多良車站','南迴最美車站']
+    ]
+  },
+  city: {
+    title:'台東市區放大圖', bounds:{n:22.7725, s:22.7465, w:121.1405, e:121.1685},
+    items:[
+      ['燒肉MEN','燒肉MEN','日式燒肉'],
+      ['Chu Breakfast 早餐','Chu 早餐','在地早餐'],
+      ['Aylangol Art Cafe','Aylangol','咖啡・美術館旁'],
+      ['台東客來吃樂','客來吃樂','蚵仔麵線'],
+      ['Asan 阿三刨冰','阿三刨冰','水果刨冰'],
+      ['鐵花村','鐵花村','晚上音樂市集'],
+      ["mita'ay","mita'ay",'原民套餐'],
+      ['台東森林公園（琵琶湖）','森林公園','琵琶湖騎車'],
+      ['活水湖','活水湖','湖畔散步'],
+      ['葉氏海鮮','葉氏海鮮','生魚片'],
+      ['台東天后宮','天后宮','百年廟宇'],
+      ['長生塩人 拉麵','長生塩人','拉麵 17:00 開'],
+      ['屋賀爺燒肉','屋賀爺燒肉','人氣燒肉'],
+      ['寶桑豆花','寶桑豆花','古早味豆花']
+    ]
+  }
+};
+const SWEET = /豆花|冰|咖啡|Cafe|甜品/;
+function kindOf(x){ return x.cat==='spot' ? 'spot' : (SWEET.test(x.n) ? 'sweet' : 'food'); }
+const KIND = {spot:{c:'#B9DAA5', t:'景點'}, food:{c:'#F2A497', t:'美食'}, sweet:{c:'#F6D27A', t:'咖啡甜點'}};
+const fmtCount = c => c>=10000 ? (c/10000).toFixed(1).replace(/\.0$/,'')+'萬' : c.toLocaleString();
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/'/g,'&#39;');
+
+function spotPanelSVG(key, startNo){
+  const P = SPOTMAP[key], W=380, LW=104, GAP=6, MX0=LW+GAP+4, MX1=W-LW-GAP-4;
+  const b=P.bounds, kmW=(b.e-b.w)*111*Math.cos(22.75*Math.PI/180), kmH=(b.n-b.s)*111;
+  const mapW=MX1-MX0, mapH=mapW*kmH/kmW;
+  const rows=Math.ceil(P.items.length/2), slot=62, top=44, LH=52;
+  const H=Math.max(top+rows*slot+20, top+mapH+30);
+  const MY0=top+(H-top-10-mapH)/2;
+  const pj=(lat,lng)=>[MX0+(lng-b.w)/(b.e-b.w)*mapW, MY0+(b.n-lat)/(b.n-b.s)*mapH];
+  const pts=P.items.map(([n,short,note],i)=>{ const x=byName(n); const [px,py]=pj(x.lat,x.lng); return {x,short,note,px,py}; });
+  // 左右分邊：依經度中位數分，再依 y 排序
+  const sorted=[...pts].sort((a,b)=>a.px-b.px), half=Math.ceil(pts.length/2);
+  const L=sorted.slice(0,half).sort((a,b)=>a.py-b.py), R=sorted.slice(half).sort((a,b)=>a.py-b.py);
+  const place=(arr,side)=>arr.forEach((p,i)=>{
+    const span=(H-top-16), step=span/arr.length;
+    p.ly=top+step*i+(step-LH)/2; p.lx= side==='L' ? 4 : W-LW-4; p.side=side;
+  });
+  place(L,'L'); place(R,'R');
+  let no=startNo; [...L,...R].sort((a,b)=>a.side===b.side?a.ly-b.ly:(a.side==='L'?-1:1)).forEach(p=>p.no=no++);
+  // 地形
+  let terrain='';
+  if(key==='county'){
+    const coast=[[22.945,121.300],[22.90,121.262],[22.86,121.232],[22.83,121.214],[22.80,121.204],[22.78,121.188],[22.758,121.168],[22.745,121.145],[22.725,121.105],[22.705,121.072],[22.68,121.045],[22.64,121.028],[22.60,121.008],[22.56,120.988],[22.52,120.968],[22.48,120.950]];
+    const land=coast.map(([a,c])=>pj(a,c)).map(p=>p.join(',')).join(' ')+` ${MX0},${MY0+mapH} ${MX0},${MY0}`;
+    const r9=[[22.94,121.13],[22.90,121.12],[22.84,121.11],[22.79,121.12],[22.762,121.14],[22.735,121.11],[22.70,121.06],[22.62,121.012],[22.56,120.985],[22.50,120.958]].map(([a,c])=>pj(a,c).join(',')).join(' ');
+    const r11=[[22.762,121.15],[22.79,121.19],[22.83,121.208],[22.88,121.236],[22.94,121.28]].map(([a,c])=>pj(a,c).join(',')).join(' ');
+    const mt=(lat,lng,s)=>{const [x,y]=pj(lat,lng);return `<path d="M${x-s} ${y} L${x} ${y-s*1.5} L${x+s} ${y}Z" fill="#FFFCF6"/>`;};
+    const town=(t,lat,lng)=>{const [x,y]=pj(lat,lng);return `<text x="${x}" y="${y}" font-size="9" text-anchor="middle" fill="#3E3A39" stroke="none" opacity=".7">${t}</text>`;};
+    const [gx,gy]=pj(22.67,121.27);
+    const [bx,by]=pj(22.80,120.95);
+    terrain=`<rect x="${MX0}" y="${MY0}" width="${mapW}" height="${mapH}" rx="14" fill="#A8D3E6" stroke="none"/>
+      <polygon points="${land}" fill="#B9DAA5"/>
+      <g stroke-width="2">${mt(22.86,120.95,9)}${mt(22.83,120.97,7)}${mt(22.62,120.93,9)}${mt(22.58,120.95,7)}${mt(22.75,120.95,8)}</g>
+      <polyline points="${r9}" fill="none" stroke="#FFFFFF" stroke-width="4"/><polyline points="${r9}" fill="none" stroke-width="1.5" stroke-dasharray="3 4"/>
+      <polyline points="${r11}" fill="none" stroke="#FFFFFF" stroke-width="4"/><polyline points="${r11}" fill="none" stroke-width="1.5" stroke-dasharray="3 4"/>
+      ${town('台東市',22.772,121.115)}${town('卑南鄉',22.84,121.03)}${town('鹿野鄉',22.905,121.17)}${town('太麻里',22.60,120.975)}${town('東河鄉',22.918,121.21)}
+      <text x="${MX1-6}" y="${MY0+mapH-10}" font-size="10" text-anchor="end" fill="#3E3A39" stroke="none" opacity=".6">太平洋</text>
+      <g class="float" transform="translate(${bx-8} ${by-12})"><path d="M8 18 C0 18 0 4 8 1 C16 4 16 18 8 18Z" fill="#F2A497" stroke-width="2"/><rect x="5" y="20" width="6" height="4" rx="1" fill="#FFFFFF" stroke-width="1.5"/></g>`;
+  } else {
+    const coast=[[22.7725,121.1725],[22.7705,121.1715],[22.765,121.169],[22.758,121.1665],[22.752,121.1635],[22.7485,121.1605],[22.7465,121.1590]];
+    const land=coast.map(([a,c])=>pj(a,c).join(',')).join(' ')+` ${MX0},${MY0+mapH} ${MX0},${MY0}`;
+    const road=(arr)=>{const s=arr.map(([a,c])=>pj(a,c).join(',')).join(' ');return `<polyline points="${s}" fill="none" stroke="#FFFFFF" stroke-width="5"/>`;};
+    const [lx,ly]=pj(22.7682,121.1590), [sx,sy]=pj(22.751,121.1675);
+    terrain=`<rect x="${MX0}" y="${MY0}" width="${mapW}" height="${mapH}" rx="14" fill="#A8D3E6" stroke="none"/>
+      <polygon points="${land}" fill="#FBEBC0" stroke="none"/>
+      ${road([[22.7705,121.150],[22.7485,121.149]])}${road([[22.758,121.1405],[22.754,121.1640]])}${road([[22.766,121.1405],[22.762,121.166]])}${road([[22.7705,121.157],[22.7485,121.1555]])}
+      <ellipse cx="${lx}" cy="${ly}" rx="12" ry="8" fill="#A8D3E6" stroke-width="2"/>
+      <text x="${MX1-6}" y="${MY0+mapH-8}" font-size="9" text-anchor="end" fill="#3E3A39" stroke="none" opacity=".6">太平洋</text>`;
+  }
+  const lines=[...L,...R].map(p=>{
+    const ax = p.side==='L' ? p.lx+LW : p.lx, ay=p.ly+LH/2;
+    return `<polyline points="${ax},${ay} ${p.side==='L'?ax+6:ax-6},${ay} ${p.px},${p.py}" fill="none" stroke="#3E3A39" stroke-width="1.3" opacity=".55"/>`;
+  }).join('');
+  const dots=[...L,...R].map(p=>`<circle cx="${p.px}" cy="${p.py}" r="4.5" fill="${KIND[kindOf(p.x)].c}" stroke-width="2"/>`).join('');
+  const labels=[...L,...R].map(p=>{
+    const x=p.x, inP=inPlan(x.id), gone=seen.has(x.id), k=KIND[kindOf(x)];
+    const tip=`${x.n}・Google ★${x.r}・${x.c.toLocaleString()} 則評論・${inP?'已在行程，點一下移出':'點一下加入行程'}`;
+    return `<g class="sm-lab${inP?' on':''}${gone?' gone':''}" data-id="${x.id}" role="button" tabindex="0" aria-pressed="${inP}" aria-label="${esc(tip)}">
+      <title>${esc(tip)}</title>
+      <rect x="${p.lx}" y="${p.ly}" width="${LW}" height="${LH}" rx="12" fill="${inP?'#F6D27A':'#FFFFFF'}" stroke-width="2"/>
+      <circle cx="${p.lx+13}" cy="${p.ly+13}" r="8.5" fill="${k.c}" stroke-width="1.8"/>
+      <text x="${p.lx+13}" y="${p.ly+16.5}" font-size="9.5" text-anchor="middle" fill="#3E3A39" stroke="none">${p.no}</text>
+      <text x="${p.lx+25}" y="${p.ly+17}" font-size="11.5" fill="#3E3A39" stroke="none">${esc(p.short)}${inP?' ✓':''}</text>
+      <text x="${p.lx+8}" y="${p.ly+32}" font-size="9.5" fill="#3E3A39" stroke="none">★${x.r}・${fmtCount(x.c)} 則</text>
+      <text x="${p.lx+8}" y="${p.ly+45}" font-size="8.8" fill="#3E3A39" stroke="none" opacity=".75">${esc(p.note)}</text>
+    </g>`;
+  }).join('');
+  return {no, svg:`<svg viewBox="0 0 ${W} ${Math.ceil(H)}" role="group" aria-label="${P.title}" stroke="#3E3A39" stroke-linejoin="round" stroke-linecap="round" font-family="Huninn,sans-serif">
+    <text x="${W/2}" y="26" font-size="16" text-anchor="middle" fill="#3E3A39" stroke="none">${P.title}</text>
+    <path d="M${W/2-58} 33 H${W/2+58}" stroke="#F2A497" stroke-width="5" opacity=".7"/>
+    <defs><clipPath id="clip-${key}"><rect x="${MX0}" y="${MY0}" width="${mapW}" height="${mapH}" rx="14"/></clipPath></defs>
+    <g clip-path="url(#clip-${key})">${terrain}</g>
+    <rect x="${MX0}" y="${MY0}" width="${mapW}" height="${mapH}" rx="14" fill="none" stroke-width="2.5"/>
+    ${lines}${dots}${labels}</svg>`};
+}
+function renderSpotMap(){
+  const a=spotPanelSVG('county',1), b=spotPanelSVG('city',a.no);
+  document.getElementById('smCounty').innerHTML=a.svg;
+  document.getElementById('smCity').innerHTML=b.svg;
+}
+function toggleFromMap(id){
+  const x=POOL[id]; if(!x) return;
+  if(inPlan(id)){ plan.stops=plan.stops.filter(s=>s.id!==id); changed(`已從行程移除 ${x.n}`); }
+  else { plan.stops.push({id, stay:stayOf(x)}); changed(`${x.n} 已加入行程，時間已重算（可按「自動排順序」）`); }
+}
+['smCounty','smCity'].forEach(idn=>{
+  const el=document.getElementById(idn);
+  el.addEventListener('click',e=>{ const g=e.target.closest('.sm-lab'); if(g) toggleFromMap(g.dataset.id); });
+  el.addEventListener('keydown',e=>{ if(e.key!=='Enter'&&e.key!==' ') return; const g=e.target.closest('.sm-lab'); if(!g) return; e.preventDefault(); const id=g.dataset.id; toggleFromMap(id); const again=document.querySelector(`.sm-lab[data-id="${id}"]`); if(again) again.focus(); });
+});
+renderSpotMap();
+
 
 /* ---------- 待辦清單 ---------- */
 const TODO = [
