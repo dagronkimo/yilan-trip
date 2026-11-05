@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>台東吃喝一日旅</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" defer></script>
+<style>
+:root{
+  --paper:#FFFCF6; --ink:#3E3A39; --coral:#F2A497; --yellow:#F6D27A; --sky:#A8D3E6; --green:#B9DAA5; --white:#FFFFFF;
+  --line:3px solid var(--ink); --r:22px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--paper);color:var(--ink);font-family:"Huninn",system-ui,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+.wrap{max-width:560px;margin:0 auto;padding:0 16px}
+main.wrap{padding-top:66px}
+section{scroll-margin-top:72px;padding:28px 0 8px}
+h2{font-size:1.35rem;display:flex;align-items:center;gap:10px;margin-bottom:14px}
+h2 .dot{width:18px;height:18px;border:var(--line);border-radius:50%;flex:none}
+.card{background:var(--white);border:var(--line);border-radius:var(--r);box-shadow:0 4px 0 var(--ink)}
+
+/* ---------- 固定選單 ---------- */
+.nav{position:fixed;inset:0 0 auto 0;z-index:50;background:var(--paper);border-bottom:var(--line);padding-top:env(safe-area-inset-top)}
+.nav .in{max-width:560px;margin:0 auto;display:flex;align-items:center;gap:10px;padding:8px 12px;overflow-x:auto;scrollbar-width:none}
+.nav .in::-webkit-scrollbar{display:none}
+.logo{font-size:1.05rem;white-space:nowrap;display:flex;align-items:center;gap:6px;margin-right:4px}
+.nav a.lk{flex:none;text-decoration:none;font-size:.92rem;padding:5px 12px;border:var(--line);border-radius:999px;background:var(--white)}
+.nav a.lk.on{background:var(--yellow)}
+
+/* ---------- 首頁 ---------- */
+.hero{padding-top:20px}
+.hero-art{overflow:hidden;padding:0;background:#EAF5FA}
+.hero-art svg{display:block;width:100%;height:auto}
+.hero h1{font-size:1.75rem;line-height:1.3;margin:18px 0 4px}
+.hero .sub{opacity:.8}
+.count{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
+.count div{border:var(--line);border-radius:16px;text-align:center;padding:8px 2px 6px}
+.count b{display:block;font-size:1.6rem;font-weight:400;line-height:1.2;font-variant-numeric:tabular-nums}
+.count span{font-size:.8rem}
+.count div:nth-child(1){background:var(--coral)}.count div:nth-child(2){background:var(--yellow)}
+.count div:nth-child(3){background:var(--sky)}.count div:nth-child(4){background:var(--green)}
+.count-msg{margin-top:8px;font-size:.9rem;opacity:.85}
+
+/* ---------- 航班 ---------- */
+.flights{display:grid;gap:14px}
+.flight{padding:16px}
+.flight .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.pill{display:inline-block;font-size:.78rem;padding:2px 10px;border:2.5px solid var(--ink);border-radius:999px;background:var(--white);white-space:nowrap}
+.route{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px}
+.route .ap b{display:block;font-size:1.7rem;font-weight:400;line-height:1.1}
+.route .ap small{font-size:.8rem;opacity:.8}
+.route .ap.r{text-align:right}
+.route svg{width:100%;height:44px}
+.flight .meta{display:flex;justify-content:space-between;gap:8px;margin-top:10px;font-size:.88rem;border-top:2.5px dashed var(--ink);padding-top:8px}
+
+/* ---------- 每日行程 ---------- */
+.tabs{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 10px;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:none;font-family:inherit;color:var(--ink);background:var(--white);border:var(--line);border-radius:18px;padding:6px 12px;text-align:center;cursor:pointer;min-width:68px;box-shadow:0 3px 0 var(--ink)}
+.tab b{display:block;font-weight:400;font-size:1.1rem;line-height:1.2}
+.tab small{font-size:.75rem}
+.tab[aria-selected="true"]{background:var(--coral);transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
+.tab:focus-visible,.nav a:focus-visible,.chk input:focus-visible+span{outline:3px dashed var(--ink);outline-offset:3px}
+.dayhead{display:flex;align-items:center;gap:12px;padding:12px 14px;margin-bottom:16px;background:var(--white)}
+.dayhead svg{width:84px;height:66px;flex:none}
+.dayhead h3{font-weight:400;font-size:1.15rem;line-height:1.3}
+.dayhead p{font-size:.85rem}
+.tl{position:relative;padding-left:26px}
+.tl::before{content:"";position:absolute;left:9px;top:6px;bottom:6px;border-left:3px dashed var(--ink)}
+.it{position:relative;margin-bottom:14px}
+.it::before{content:"";position:absolute;left:-24px;top:14px;width:15px;height:15px;border:var(--line);border-radius:50%;background:var(--sky)}
+.it.must::before{background:var(--coral)}
+.it .card{padding:12px 14px}
+.it .time{font-size:.85rem;display:inline-block;background:var(--paper);border:2.5px solid var(--ink);border-radius:10px;padding:0 8px;margin-bottom:6px}
+.it h4{font-weight:400;font-size:1.08rem;display:flex;flex-wrap:wrap;align-items:center;gap:6px;line-height:1.35}
+.must-b{font-size:.75rem;background:var(--coral);border:2.5px solid var(--ink);border-radius:999px;padding:0 8px}
+.it p{font-size:.9rem;margin-top:4px}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;align-items:center}
+.tg{font-size:.76rem;border:2.5px solid var(--ink);border-radius:999px;padding:1px 9px;display:inline-flex;align-items:center;gap:4px}
+.tg i{font-style:normal}
+.rate{font-size:.76rem;opacity:.85}
+.maplk{font-size:.76rem;text-decoration:none;border-bottom:2px solid var(--ink);margin-left:auto}
+.legend{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 14px}
+.pop{animation:pop .55s cubic-bezier(.3,1.6,.5,1) both}
+@keyframes pop{0%{transform:translateY(14px) scale(.96);opacity:0}60%{transform:translateY(-6px) scale(1.02);opacity:1}100%{transform:none;opacity:1}}
+
+/* ---------- 待辦 ---------- */
+.todo{padding:14px}
+.prog{display:flex;align-items:center;gap:10px;margin-bottom:10px;font-size:.9rem}
+.bar{flex:1;height:16px;border:var(--line);border-radius:999px;overflow:hidden;background:var(--paper)}
+.bar i{display:block;height:100%;width:0;background:var(--green);border-right:3px solid var(--ink);transition:width .4s}
+.chk{display:flex;align-items:flex-start;gap:10px;padding:9px 2px;border-bottom:2.5px dashed #d8d2c8;cursor:pointer}
+.chk:last-child{border-bottom:0}
+.chk input{position:absolute;opacity:0;width:1px;height:1px}
+.chk span.box{flex:none;width:24px;height:24px;border:var(--line);border-radius:8px;background:var(--white);display:grid;place-items:center;margin-top:1px}
+.chk span.box svg{width:16px;height:16px;opacity:0;transform:scale(.4);transition:.2s}
+.chk input:checked+span.box{background:var(--yellow)}
+.chk input:checked+span.box svg{opacity:1;transform:none}
+.chk input:checked~.txt{text-decoration:line-through;opacity:.55}
+.chk .txt small{display:block;font-size:.78rem;opacity:.8}
+
+/* ---------- 住宿 ---------- */
+.stays{display:grid;gap:14px}
+.stay{padding:14px;display:grid;grid-template-columns:56px 1fr;gap:12px}
+.stay .ic{width:56px;height:56px;border:var(--line);border-radius:16px;display:grid;place-items:center}
+.stay h4{font-weight:400;font-size:1.05rem;line-height:1.35}
+.stay p{font-size:.86rem}
+.stay ul{list-style:none;display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.stay .lnk{display:inline-block;margin-top:8px;font-size:.85rem;text-decoration:none;border:2.5px solid var(--ink);border-radius:999px;padding:2px 12px;background:var(--sky)}
+
+
+/* ---------- 路線圖 ---------- */
+.map-card{padding:0;overflow:hidden}
+.map-card svg{display:block;width:100%;height:auto}
+.map-note{font-size:.8rem;opacity:.75;margin-top:8px}
+.sched-title{font-weight:400;font-size:1.1rem;margin:18px 0 10px}
+.sched{padding:6px 14px}
+.srow{display:grid;grid-template-columns:92px 1fr;gap:4px 10px;padding:10px 0;border-bottom:2.5px dashed #d8d2c8;align-items:start}
+.srow:last-child{border-bottom:0}
+.srow .tm{font-variant-numeric:tabular-nums;font-size:.95rem}
+.srow .pl{font-size:.95rem;line-height:1.4}
+.srow .pl small{display:block;font-size:.78rem;opacity:.8}
+.srow .tags{grid-column:2;margin-top:2px}
+.srow.drive{background:transparent}
+
+/* ---------- 真實地圖 ---------- */
+.real-map{height:360px;padding:0;overflow:hidden;position:relative;z-index:0}
+.real-map .fail{padding:20px;font-size:.9rem}
+.mk{width:28px;height:28px;border:3px solid #3E3A39;border-radius:50%;background:#F2A497;display:grid;place-items:center;font-family:"Huninn",sans-serif;font-size:13px;color:#3E3A39;box-shadow:0 2px 0 #3E3A39}
+.mk.hsr{background:#A8D3E6}.mk.sea{background:#F6D27A}
+.leaflet-popup-content{font-family:"Huninn",system-ui,sans-serif;color:#3E3A39;margin:12px 14px;font-size:13px;line-height:1.5}
+.leaflet-popup-content b{font-weight:400;font-size:15px;display:block}
+.leaflet-popup-content-wrapper{border:3px solid #3E3A39;border-radius:16px;box-shadow:0 3px 0 #3E3A39}
+.pop-nav{display:inline-block;margin-top:6px;padding:2px 10px;border:2.5px solid #3E3A39;border-radius:999px;background:#A8D3E6;color:#3E3A39!important;text-decoration:none}
+.navs{display:grid;gap:10px;margin-top:12px}
+.navbtn{display:flex;align-items:center;gap:10px;text-decoration:none;padding:10px 14px;border:3px solid var(--ink);border-radius:18px;background:var(--white);box-shadow:0 3px 0 var(--ink)}
+.navbtn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
+.navbtn .no{flex:none;width:30px;height:30px;border:2.5px solid var(--ink);border-radius:50%;display:grid;place-items:center;background:var(--yellow);font-size:.9rem}
+.navbtn .tx{flex:1;font-size:.95rem;line-height:1.35}
+.navbtn .tx small{display:block;font-size:.78rem;opacity:.8}
+.navbtn .go{flex:none;font-size:.8rem;border:2.5px solid var(--ink);border-radius:999px;padding:1px 9px;background:var(--sky)}
+.stopnav{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.stopnav a{text-decoration:none;font-size:.82rem;border:2.5px solid var(--ink);border-radius:999px;padding:3px 10px;background:var(--white)}
+
+/* ---------- 口袋名單 ---------- */
+.pk-note{font-size:.85rem;opacity:.85;margin:-4px 0 12px}
+.pk-tabs{display:flex;gap:8px;margin-bottom:12px}
+.pk-tab{flex:1;font-family:inherit;color:var(--ink);background:var(--white);border:var(--line);border-radius:16px;padding:7px 4px;cursor:pointer;box-shadow:0 3px 0 var(--ink);font-size:.95rem}
+.pk-tab[aria-selected="true"]{background:var(--yellow);transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
+.pk-filter{display:flex;align-items:center;gap:8px;font-size:.85rem;margin-bottom:10px;cursor:pointer}
+.pk-filter input{width:18px;height:18px;accent-color:#F2A497}
+.pk-list{display:grid;gap:10px}
+.pk{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:center;padding:10px 12px}
+.pk .rk{width:34px;height:34px;border:2.5px solid var(--ink);border-radius:50%;display:grid;place-items:center;background:var(--paper);font-size:.9rem}
+.pk:nth-child(-n+3) .rk{background:var(--coral)}
+.pk .nm{font-size:1rem;line-height:1.35}
+.pk .meta{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px;font-size:.74rem;align-items:center}
+.pk .meta span{border:2px solid var(--ink);border-radius:999px;padding:0 7px;background:var(--white)}
+.pk .meta .open{background:var(--green)}
+.pk .meta .closed{background:var(--coral)}
+.pk .meta .in{background:var(--yellow)}
+.pk .meta .way{background:var(--sky)}
+.pk .pk-go{text-decoration:none;font-size:.8rem;border:2.5px solid var(--ink);border-radius:999px;padding:3px 10px;background:var(--sky);white-space:nowrap}
+.pk.off{opacity:.55}
+
+/* ---------- 行程編輯 ---------- */
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.plan-ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 12px;margin-bottom:14px;font-size:.9rem}
+.plan-ctl input[type=time]{font-family:inherit;font-size:.95rem;border:2.5px solid var(--ink);border-radius:10px;padding:2px 6px;background:var(--paper);color:var(--ink)}
+.pbtn{font-family:inherit;color:var(--ink);font-size:.85rem;border:2.5px solid var(--ink);border-radius:999px;padding:3px 12px;background:var(--yellow);cursor:pointer}
+.pbtn.ghost{background:var(--white)}
+.pbtn.mini{font-size:.75rem;padding:1px 9px;margin-left:6px;background:var(--white)}
+.cat-b{font-size:.72rem;border:2px solid var(--ink);border-radius:999px;padding:0 7px;background:var(--paper)}
+.warn{color:#3E3A39;background:#F2A497;border:2px solid var(--ink);border-radius:10px;padding:2px 8px;font-size:.82rem;display:inline-block}
+.row-ctl{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;margin-top:8px;padding-top:8px;border-top:2px dashed #d8d2c8;font-size:.82rem}
+.row-ctl .stayc{display:inline-flex;align-items:center;gap:6px}
+.row-ctl .stayc b{font-weight:400;font-size:.95rem}
+.ic-btn{font-family:inherit;color:var(--ink);width:30px;height:30px;border:2.5px solid var(--ink);border-radius:50%;background:var(--white);cursor:pointer;font-size:.95rem;line-height:1}
+.ic-btn.del{background:var(--coral)}
+.ic-btn:disabled{opacity:.35;cursor:default}
+.pk{grid-template-columns:34px 1fr}
+.pk-main{min-width:0}
+.pk-act{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;align-items:center}
+.pk-btn{font-family:inherit;color:var(--ink);font-size:.8rem;border:2.5px solid var(--ink);border-radius:999px;padding:2px 10px;background:var(--white);cursor:pointer}
+.pk-btn.add{background:var(--green)}
+.pk-btn.in{background:var(--yellow)}
+.pk-btn.seen[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.pk-filters{display:flex;flex-wrap:wrap;gap:4px 16px}
+.pk .pk-go{text-decoration:none;font-size:.8rem;border:2.5px solid var(--ink);border-radius:999px;padding:2px 10px;background:var(--sky);margin-left:auto}
+
+/* ---------- 操作說明 ---------- */
+.help{padding:12px 14px;margin-bottom:14px}
+.help h3{font-weight:400;font-size:1rem;margin-bottom:6px}
+.help ul{list-style:none;display:grid;gap:7px}
+.help li{display:flex;align-items:center;gap:6px;font-size:.88rem;flex-wrap:wrap}
+.help p{font-size:.82rem;margin-top:8px;opacity:.9}
+.help .demo{display:inline-grid;place-items:center;cursor:default;flex:none}
+.help .ic-btn.demo{width:26px;height:26px;font-size:.85rem}
+.help .warn{padding:0 6px}
+
+/* ---------- 景點地圖 ---------- */
+.sm-card{padding:6px 4px 10px;margin-bottom:14px;overflow:hidden}
+.sm-card svg{display:block;width:100%;height:auto}
+.sm-legend{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:.82rem;margin-bottom:10px}
+.sm-legend span{display:inline-flex;align-items:center;gap:5px}
+.sm-legend i{width:14px;height:14px;border:2px solid var(--ink);border-radius:50%;display:inline-block}
+.sm-lab{cursor:pointer}
+.sm-lab:hover rect,.sm-lab:focus-visible rect{stroke-width:3}
+.sm-lab:focus{outline:none}
+.sm-lab:focus-visible rect{stroke-dasharray:4 3}
+.sm-lab.gone{opacity:.45}
+
+footer{text-align:center;font-size:.8rem;opacity:.75;padding:30px 0 40px}
+
+/* ---------- 插圖動畫 ---------- */
+.float{animation:float 4s ease-in-out infinite}
+.bob{animation:bob 3.6s ease-in-out infinite}
+.sway{animation:sway 5s ease-in-out infinite}
+.spin{animation:spin 24s linear infinite;transform-box:fill-box;transform-origin:center}
+.drift{animation:drift 9s ease-in-out infinite}
+.wiggle{animation:wiggle 3s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 0%}
+.twinkle{animation:twinkle 2.4s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+.ride{animation:ride 6s ease-in-out infinite}
+@keyframes float{50%{transform:translateY(-6px)}}
+@keyframes bob{50%{transform:translate(4px,-4px)}}
+@keyframes sway{50%{transform:translateX(-10px)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes drift{50%{transform:translateX(16px)}}
+@keyframes wiggle{50%{transform:rotate(5deg)}}
+@keyframes twinkle{50%{transform:scale(.7);opacity:.6}}
+@keyframes ride{0%,100%{transform:translateX(-18px)}50%{transform:translateX(18px)}}
+
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+@media (min-width:600px){.hero h1{font-size:2.1rem}}
+</style>
+</head>
+<body>
+
+<nav class="nav" aria-label="主選單">
+  <div class="in">
+    <span class="logo" aria-hidden="true">
+      <svg width="26" height="26" viewBox="0 0 26 26"><circle cx="13" cy="10" r="8" fill="#F2A497" stroke="#3E3A39" stroke-width="3"/><path d="M9 17 L11 21 H15 L17 17" fill="none" stroke="#3E3A39" stroke-width="2.5" stroke-linejoin="round"/><rect x="10" y="21" width="6" height="3" fill="#F6D27A" stroke="#3E3A39" stroke-width="2"/></svg>
+      台東吃喝一日旅
+    </span>
+    <a class="lk" href="#home">首頁</a>
+    <a class="lk" href="#flight">交通</a>
+    <a class="lk" href="#spotmap">景點地圖</a>
+    <a class="lk" href="#route">路線</a>
+    <a class="lk" href="#days">行程</a>
+    <a class="lk" href="#pocket">口袋名單</a>
+    <a class="lk" href="#todo">清單</a>
+    <a class="lk" href="#stay">租車</a>
+  </div>
+</nav>
+
+<main class="wrap">
+
+<!-- 首頁 -->
+<section id="home" class="hero">
+  <div class="card hero-art">
+    <svg viewBox="0 0 360 230" role="img" aria-label="台東插圖：太平洋、海邊的南迴火車從隧道開出、熱氣球、海岸山脈和遠方的綠島" stroke="#3E3A39" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+      <!-- 太陽 -->
+      <g class="spin">
+        <line x1="300" y1="10" x2="300" y2="4"/><line x1="300" y1="70" x2="300" y2="64"/>
+        <line x1="270" y1="37" x2="264" y2="37"/><line x1="336" y1="37" x2="330" y2="37"/>
+        <line x1="279" y1="16" x2="275" y2="12"/><line x1="325" y1="62" x2="321" y2="58"/>
+        <line x1="321" y1="16" x2="325" y2="12"/><line x1="275" y1="62" x2="279" y2="58"/>
+      </g>
+      <circle cx="300" cy="37" r="20" fill="#F6D27A"/>
+      <circle cx="293" cy="35" r="2" fill="#3E3A39" stroke="none"/><circle cx="307" cy="35" r="2" fill="#3E3A39" stroke="none"/>
+      <path d="M295 42q5 4 10 0" fill="none" stroke-width="2.5"/>
+      <!-- 雲 -->
+      <g class="drift"><path d="M196 58h40a10 10 0 0 0-8-14 13 13 0 0 0-22-3 10 10 0 0 0-10 17z" fill="#FFFFFF"/></g>
+      <!-- 熱氣球 -->
+      <g class="float">
+        <path d="M60 52 C40 52 38 26 60 18 C82 26 80 52 60 52Z" fill="#F2A497"/>
+        <path d="M60 18 C54 28 54 44 60 52 C66 44 66 28 60 18Z" fill="#F6D27A"/>
+        <path d="M54 52 L56 60 M66 52 L64 60" fill="none" stroke-width="2"/>
+        <rect x="55" y="60" width="10" height="7" rx="1.5" fill="#FFFFFF" stroke-width="2.5"/>
+      </g>
+      <g class="float" style="animation-delay:-2s;animation-duration:5s">
+        <path d="M140 40 C126 40 124 22 140 16 C156 22 154 40 140 40Z" fill="#A8D3E6"/>
+        <path d="M140 16 C136 23 136 34 140 40 C144 34 144 23 140 16Z" fill="#FFFFFF"/>
+        <path d="M136 40 L137 45 M144 40 L143 45" fill="none" stroke-width="2"/>
+        <rect x="136" y="45" width="8" height="5" rx="1.5" fill="#F6D27A" stroke-width="2.5"/>
+      </g>
+      <!-- 海岸山脈 -->
+      <path d="M-4 120 L30 70 L64 104 L100 60 L150 112 L170 120Z" fill="#B9DAA5"/>
+      <!-- 太平洋 -->
+      <path d="M-4 120 H364 V234 H-4Z" fill="#A8D3E6"/>
+      <!-- 綠島 -->
+      <path d="M262 122 Q272 108 290 112 Q300 106 306 122Z" fill="#B9DAA5"/>
+      <!-- 浪 -->
+      <g class="sway" fill="none" stroke="#FFFFFF" stroke-width="3">
+        <path d="M200 146 q8 -6 16 0 t16 0"/><path d="M300 150 q8 -6 16 0 t16 0"/><path d="M230 216 q8 -6 16 0 t16 0"/>
+      </g>
+      <!-- 海岸 + 鐵道 -->
+      <path d="M-4 150 Q60 146 120 156 T230 176 Q280 184 364 186 V234 H-4Z" fill="#F6D27A"/>
+      <path d="M-4 168 Q60 164 120 174 T230 194 Q280 202 364 204" fill="none" stroke-width="3"/>
+      <!-- 隧道口 -->
+      <path d="M-4 172 V118 Q36 122 52 172Z" fill="#B9DAA5"/>
+      <path d="M8 172 V154 A16 16 0 0 1 40 154 V170Z" fill="#FFFFFF"/>
+      <path d="M14 171 V156 A10 10 0 0 1 34 156 V171Z" fill="#3E3A39"/>
+      <!-- 南迴火車 -->
+      <g class="ride" style="animation-duration:8s">
+        <g transform="translate(70 140) rotate(6)">
+          <rect x="0" y="0" width="60" height="26" rx="7" fill="#FFFFFF"/>
+          <path d="M62 0 H100 Q116 3 118 20 V26 H62Z" fill="#FFFFFF"/>
+          <rect x="1.5" y="17" width="57" height="5" fill="#F2A497" stroke="none"/>
+          <rect x="63.5" y="17" width="53" height="5" fill="#F2A497" stroke="none"/>
+          <g fill="#A8D3E6" stroke-width="2.5"><rect x="7" y="5" width="12" height="9" rx="2.5"/><rect x="24" y="5" width="12" height="9" rx="2.5"/><rect x="41" y="5" width="12" height="9" rx="2.5"/><rect x="69" y="5" width="12" height="9" rx="2.5"/><path d="M88 5 H100 Q109 7 111 14 H88Z"/></g>
+          <g fill="#FFFFFF"><circle cx="13" cy="28" r="3.5"/><circle cx="47" cy="28" r="3.5"/><circle cx="74" cy="28" r="3.5"/><circle cx="106" cy="28" r="3.5"/></g>
+        </g>
+      </g>
+      <!-- 小花 -->
+      <g class="twinkle"><circle cx="320" cy="214" r="4" fill="#F2A497"/><circle cx="120" cy="206" r="4" fill="#FFFFFF"/></g>
+      <g class="twinkle" style="animation-delay:-1.2s"><circle cx="210" cy="222" r="4" fill="#B9DAA5"/><circle cx="40" cy="214" r="3.5" fill="#F2A497"/></g>
+    </svg>
+  </div>
+  <h1>新竹出發<br>台東吃吃喝喝一日旅</h1>
+  <p class="sub">2026/11/22（日）・高鐵到左營 → 租車開南迴 → 台東玩到晚餐再回家</p>
+  <div class="count" aria-live="polite">
+    <div><b id="cd-d">--</b><span>天</span></div>
+    <div><b id="cd-h">--</b><span>時</span></div>
+    <div><b id="cd-m">--</b><span>分</span></div>
+    <div><b id="cd-s">--</b><span>秒</span></div>
+  </div>
+  <p class="count-msg" id="cd-msg">距離出發還有</p>
+</section>
+
+<!-- 交通 -->
+<section id="flight">
+  <h2><span class="dot" style="background:var(--sky)"></span>交通</h2>
+  <div class="flights">
+    <article class="card flight">
+      <div class="top"><span class="pill" style="background:var(--coral)">去程高鐵・11/22（日）</span><span class="pill">0603 次</span></div>
+      <div class="route">
+        <div class="ap"><b>新竹</b><small>高鐵新竹站<br>07:27</small></div>
+        <svg viewBox="0 0 120 44" aria-hidden="true"><line x1="6" y1="36" x2="114" y2="36" stroke="#3E3A39" stroke-width="3" stroke-dasharray="5 6" stroke-linecap="round"/><g transform="translate(30 14)"><path d="M0 4 Q0 0 4 0 H40 Q58 2 62 18 H0Z" fill="#FFFFFF" stroke="#3E3A39" stroke-width="2.5" stroke-linejoin="round"/><rect x="1" y="11" width="59" height="3" fill="#F2A497"/><rect x="6" y="3" width="9" height="5" rx="1.5" fill="#A8D3E6" stroke="#3E3A39" stroke-width="2"/><rect x="20" y="3" width="9" height="5" rx="1.5" fill="#A8D3E6" stroke="#3E3A39" stroke-width="2"/><path d="M36 3 H44 Q50 4 52 8 H36Z" fill="#A8D3E6" stroke="#3E3A39" stroke-width="2" stroke-linejoin="round"/></g></svg>
+        <div class="ap r"><b>左營</b><small>高鐵左營站<br>08:50</small></div>
+      </div>
+      <div class="meta"><span>台灣高鐵</span><span>約 1 小時 23 分</span></div>
+    </article>
+    <article class="card flight">
+      <div class="top"><span class="pill" style="background:var(--yellow)">租車自駕</span><span class="pill">台 9 線南迴公路</span></div>
+      <div class="route">
+        <div class="ap"><b>左營</b><small>取車<br>09:10</small></div>
+        <svg viewBox="0 0 120 44" aria-hidden="true"><path d="M6 34 Q30 20 60 30 T114 26" fill="none" stroke="#3E3A39" stroke-width="3" stroke-dasharray="5 6" stroke-linecap="round"/><g transform="translate(40 8)"><path d="M0 16 V9 Q0 5 4 5 H9 L15 -2 H30 L36 5 H42 Q46 5 46 9 V16Z" fill="#F6D27A" stroke="#3E3A39" stroke-width="2.5" stroke-linejoin="round"/><circle cx="11" cy="17" r="4" fill="#FFFFFF" stroke="#3E3A39" stroke-width="2.5"/><circle cx="35" cy="17" r="4" fill="#FFFFFF" stroke="#3E3A39" stroke-width="2.5"/></g></svg>
+        <div class="ap r"><b>台東</b><small>多良車站<br>約 11:10</small></div>
+      </div>
+      <div class="meta"><span>國 1／國 3 → 台 1 → 台 9</span><span>到多良約 2 小時</span></div>
+    </article>
+    <article class="card flight">
+      <div class="top"><span class="pill" style="background:var(--green)">回程高鐵・11/22（日）</span><span class="pill">0690 次・每日行駛</span></div>
+      <div class="route">
+        <div class="ap"><b>左營</b><small>高鐵左營站<br>21:05</small></div>
+        <svg viewBox="0 0 120 44" aria-hidden="true"><line x1="6" y1="36" x2="114" y2="36" stroke="#3E3A39" stroke-width="3" stroke-dasharray="5 6" stroke-linecap="round"/><g transform="translate(30 14)"><path d="M0 4 Q0 0 4 0 H40 Q58 2 62 18 H0Z" fill="#FFFFFF" stroke="#3E3A39" stroke-width="2.5" stroke-linejoin="round"/><rect x="1" y="11" width="59" height="3" fill="#B9DAA5"/><rect x="6" y="3" width="9" height="5" rx="1.5" fill="#A8D3E6" stroke="#3E3A39" stroke-width="2"/><rect x="20" y="3" width="9" height="5" rx="1.5" fill="#A8D3E6" stroke="#3E3A39" stroke-width="2"/><path d="M36 3 H44 Q50 4 52 8 H36Z" fill="#A8D3E6" stroke="#3E3A39" stroke-width="2" stroke-linejoin="round"/></g></svg>
+        <div class="ap r"><b>新竹</b><small>高鐵新竹站<br>22:28</small></div>
+      </div>
+      <div class="meta"><span>有停新竹</span><span>約 1 小時 23 分</span></div>
+    </article>
+  </div>
+</section>
+
+<!-- 景點地圖 -->
+<section id="spotmap">
+  <h2><span class="dot" style="background:var(--green)"></span>台東高分景點地圖</h2>
+  <p class="pk-note">從 Google 4.4 分以上、評論多的店家和景點精選 26 處（多良車站 4.1 分，已在行程中保留）。<b>點名稱就能加入或移出「我的行程」</b>，黃底打 ✓ 的是已在行程裡的點。</p>
+  <div class="sm-legend">
+    <span><i style="background:#B9DAA5"></i>景點</span><span><i style="background:#F2A497"></i>美食</span><span><i style="background:#F6D27A"></i>咖啡甜點</span><span><i style="background:#F6D27A;border-radius:6px"></i>✓ 已在行程</span>
+  </div>
+  <div class="card sm-card" id="smCounty"></div>
+  <div class="card sm-card" id="smCity"></div>
+  <p class="map-note">位置示意，非導航比例圖；評分與評論數為 2026 年 10 月 Google 資料。星號後為評論數（萬＝一萬則）。</p>
+</section>
+
+<!-- 路線圖 -->
+<section id="route">
+  <h2><span class="dot" style="background:var(--green)"></span>路線圖</h2>
+  <div class="card map-card">
+    <svg id="routeMap" viewBox="0 0 360 392" role="img" aria-label="台東一日路線圖：高鐵從新竹到左營，開車經枋寮、南迴公路到多良車站，再到台東市區、小野柳與加路蘭，晚上原路開回左營" stroke="#3E3A39" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" font-family="Huninn,sans-serif">
+      <!-- 海 -->
+      <rect x="0" y="0" width="360" height="392" fill="#A8D3E6" stroke="none"/>
+      <!-- 陸地（南台灣） -->
+      <path d="M0 0 H332 L330 30 L326 55 L311 92 L279 123 L263 178 L249 240 L241 277 L228 339 L215 392 H151 L129 327 L100 296 L62 246 L26 154 L23 30 L0 30Z" fill="#B9DAA5"/>
+      <!-- 中央山脈 -->
+      <g fill="#FFFCF6" stroke-width="2.5">
+        <path d="M176 210 L192 184 L208 210Z"/><path d="M198 206 L216 176 L232 206Z"/>
+        <path d="M150 300 L166 272 L182 300Z"/><path d="M172 296 L188 268 L204 296Z"/>
+      </g>
+      <text x="190" y="226" font-size="9" fill="#3E3A39" stroke="none" text-anchor="middle">中央山脈</text>
+      <!-- 海名 -->
+      <text x="300" y="300" font-size="12" fill="#3E3A39" stroke="none" text-anchor="middle" opacity=".7">太平洋</text>
+      <text x="40" y="300" font-size="11" fill="#3E3A39" stroke="none" text-anchor="middle" opacity=".7">台灣海峽</text>
+      <!-- 指北 -->
+      <g transform="translate(344 372)"><path d="M0 -12 L5 4 L0 0 L-5 4Z" fill="#F2A497"/><text x="0" y="14" font-size="8" text-anchor="middle" fill="#3E3A39" stroke="none">N</text></g>
+
+      <!-- 高鐵 -->
+      <line x1="38" y1="131" x2="38" y2="10" stroke="#FFFFFF" stroke-width="7"/>
+      <line x1="38" y1="131" x2="38" y2="10" stroke-dasharray="2 6" stroke-width="3"/>
+      <path d="M32 18 L38 8 L44 18" fill="none" stroke-width="3"/>
+      <g font-size="10.5" fill="#3E3A39" stroke="none">
+        <rect x="46" y="14" width="98" height="60" rx="10" fill="#FFFFFF" stroke="#3E3A39" stroke-width="2.5"/>
+        <text x="54" y="31" font-size="11.5">高鐵↕新竹</text>
+        <text x="54" y="48">去 07:27→08:50</text>
+        <text x="54" y="64">回 21:05→22:28</text>
+      </g>
+
+      <!-- 開車路線 -->
+      <path id="routePath" d="M38 131 C44 170 52 215 70 250 C88 285 110 310 129 327 C160 340 200 342 228 336 C238 310 244 270 247 240 C252 210 262 180 272 150 C282 122 294 104 305 90" fill="none" stroke="#FFFFFF" stroke-width="8"/>
+      <path d="M38 131 C44 170 52 215 70 250 C88 285 110 310 129 327 C160 340 200 342 228 336 C238 310 244 270 247 240 C252 210 262 180 272 150 C282 122 294 104 305 90" fill="none" stroke="#F2A497" stroke-width="3" stroke-dasharray="7 6"/>
+      <path d="M305 90 L322 64 L323 56" fill="none" stroke="#FFFFFF" stroke-width="7"/>
+      <path d="M305 90 L322 64 L323 56" fill="none" stroke="#F2A497" stroke-width="3" stroke-dasharray="4 5"/>
+
+      <!-- 小車 -->
+      <g id="mapCar">
+        <g transform="translate(-11 -7)">
+          <path d="M0 11 V6 Q0 3 3 3 H6 L10 -1 H17 L20 3 H20 Q22 3 22 6 V11Z" fill="#F6D27A" stroke-width="2"/>
+          <circle cx="6" cy="12" r="2.6" fill="#FFFFFF" stroke-width="2"/><circle cx="17" cy="12" r="2.6" fill="#FFFFFF" stroke-width="2"/>
+        </g>
+        <animateMotion dur="14s" repeatCount="indefinite" rotate="0" keyPoints="0;1" keyTimes="0;1" calcMode="linear"><mpath href="#routePath"/></animateMotion>
+      </g>
+
+      <!-- 地名小點 -->
+      <g font-size="9" fill="#3E3A39" stroke="none">
+        <circle cx="129" cy="327" r="3.5" fill="#FFFFFF" stroke="#3E3A39" stroke-width="2"/><text x="112" y="320" text-anchor="end">枋寮</text>
+        <circle cx="228" cy="336" r="3.5" fill="#FFFFFF" stroke="#3E3A39" stroke-width="2"/><text x="236" y="352">大武</text>
+        <text x="146" y="350">台 9 線南迴公路</text>
+      </g>
+
+      <!-- 連接線 -->
+      <g stroke-width="1.8" stroke-dasharray="3 3" fill="none">
+        <line x1="236" y1="235" x2="247" y2="240"/>
+        <line x1="270" y1="96" x2="296" y2="92"/>
+        <line x1="290" y1="128" x2="305" y2="90"/>
+        <line x1="300" y1="46" x2="320" y2="60"/>
+      </g>
+
+      <!-- 編號標記 -->
+      <g font-size="11" text-anchor="middle" stroke-width="2.5">
+        <g class="pin"><circle cx="38" cy="131" r="10" fill="#F2A497"/><text x="38" y="135" fill="#3E3A39" stroke="none">1</text></g>
+        <g class="pin"><circle cx="247" cy="240" r="10" fill="#F2A497"/><text x="247" y="244" fill="#3E3A39" stroke="none">2</text></g>
+        <g class="pin"><circle cx="305" cy="90" r="10" fill="#F2A497"/><text x="305" y="94" fill="#3E3A39" stroke="none">3</text></g>
+        <g class="pin"><circle cx="323" cy="56" r="10" fill="#F6D27A"/><text x="323" y="60" fill="#3E3A39" stroke="none">4</text></g>
+      </g>
+
+      <!-- 時間卡片 -->
+      <g font-size="10.5" fill="#3E3A39" stroke="none">
+        <rect x="56" y="122" width="100" height="76" rx="10" fill="#FFFFFF" stroke="#3E3A39" stroke-width="2.5"/>
+        <text x="64" y="139" font-size="11.5">① 左營站</text>
+        <text x="64" y="155">09:10 取車出發</text>
+        <text x="64" y="171">20:30 還車</text>
+        <text x="64" y="187">21:05 搭高鐵</text>
+
+        <rect x="128" y="212" width="108" height="44" rx="10" fill="#FFFFFF" stroke="#3E3A39" stroke-width="2.5"/>
+        <text x="136" y="229" font-size="11.5">② 多良車站</text>
+        <text x="136" y="246">11:10–11:50 看海</text>
+
+        <rect x="166" y="76" width="104" height="74" rx="10" fill="#FFFFFF" stroke="#3E3A39" stroke-width="2.5"/>
+        <text x="174" y="93" font-size="11.5">③ 市區吃午餐</text>
+        <text x="174" y="109">12:40 扁食</text>
+        <text x="174" y="124">13:15 麵線</text>
+        <text x="174" y="139">13:50 咖啡</text>
+
+        <rect x="206" y="6" width="94" height="58" rx="10" fill="#FFFFFF" stroke="#3E3A39" stroke-width="2.5"/>
+        <text x="214" y="23" font-size="11.5">④ 東海岸</text>
+        <text x="214" y="39">14:45 小野柳</text>
+        <text x="214" y="55">15:30 加路蘭</text>
+
+        <rect x="290" y="112" width="66" height="78" rx="10" fill="#FFFFFF" stroke="#3E3A39" stroke-width="2.5"/>
+        <text x="297" y="129" font-size="11">③ 回市區</text>
+        <text x="297" y="145" font-size="10">16:10 甜品</text>
+        <text x="297" y="160" font-size="10">16:50 晚餐</text>
+        <text x="297" y="176" font-size="10">17:45 出發</text>
+
+        <rect x="6" y="342" width="122" height="20" rx="10" fill="#F6D27A" stroke="#3E3A39" stroke-width="2"/>
+        <text x="14" y="356" font-size="10">去 09:10 → 11:10 多良</text>
+        <rect x="6" y="366" width="122" height="20" rx="10" fill="#F2A497" stroke="#3E3A39" stroke-width="2"/>
+        <text x="14" y="380" font-size="10">回 17:45 → 20:30 左營</text>
+      </g>
+    </svg>
+  </div>
+  <p class="map-note">推薦路線示意圖，非實際比例。自己改行程後，請以下方真實地圖、導航和時間表為準（會自動更新）。</p>
+
+
+  <h3 class="sched-title">真實地圖</h3>
+  <div class="card real-map" id="realMap" role="region" aria-label="可縮放的真實地圖"></div>
+  <p class="map-note">跟著「我的行程」即時更新；點編號看時間並開啟 Google 導航，「鐵」是高鐵左營站。<button type="button" class="pbtn mini" id="fitMap">重新置中</button></p>
+
+  <h3 class="sched-title">Google 地圖分段導航</h3>
+  <p class="map-note" style="margin-top:0">依你的行程自動分段（手機版 Google 地圖每段最多 3 個中途點）；到一段終點再點下一段。</p>
+  <div class="navs" id="navSegs"></div>
+  <div class="stopnav" id="stopNav" aria-label="單站導航"></div>
+
+  <h3 class="sched-title">完整時間表（依我的行程）</h3>
+  <div class="card sched" id="sched"></div>
+</section>
+
+<!-- 行程 -->
+<section id="days">
+  <h2><span class="dot" style="background:var(--coral)"></span>我的行程（可編輯）</h2>
+  <p class="pk-note">高鐵去回程固定，左營取車到還車中間可以自由增刪。從下方「口袋名單」按「＋加入」加點、按「去過」排除；時間、地圖、導航和時間表都會自動重算，並記在這支手機上。</p>
+  <div class="card help">
+    <h3>操作說明</h3>
+    <ul>
+      <li><span class="ic-btn demo">↑</span><span class="ic-btn demo">↓</span>把這一站往前或往後移</li>
+      <li><span class="ic-btn demo del">✕</span>從行程刪除這一站</li>
+      <li><span class="ic-btn demo">−</span><span class="ic-btn demo">＋</span>停留時間每次減少或增加 15 分鐘</li>
+      <li><span class="pbtn demo">自動排順序</span>從南迴進台東的位置，依距離重新排順序</li>
+      <li><span class="pbtn demo ghost">重設推薦行程</span>回到預設行程</li>
+      <li><span class="pk-btn demo add">＋加入</span><span class="pk-btn demo">去過</span>在下方口袋名單加點、排除去過的</li>
+    </ul>
+    <p>出現 <span class="warn">⚠</span> 代表到站時間不在週日營業時間內，或還車後趕不上 21:05 的高鐵。所有修改都會存在這支手機上。</p>
+  </div>
+  <div class="legend" id="legend" aria-label="交通標籤說明"></div>
+  <p class="sr-only" id="planLive" aria-live="polite"></p>
+  <div id="dayPanel"></div>
+</section>
+
+<!-- 口袋名單 -->
+<section id="pocket">
+  <h2><span class="dot" style="background:var(--yellow)"></span>口袋名單・挑點加入行程</h2>
+  <p class="pk-note">Google 4.3 分以上、依評論數排序的前 20 名。去過的按「去過」就會藏起來，沒去過的按「＋加入」排進行程。營業時間為週日。</p>
+  <div class="pk-tabs" role="tablist" aria-label="名單分類">
+    <button class="pk-tab" role="tab" aria-selected="true" data-k="snack">小吃・甜點</button>
+    <button class="pk-tab" role="tab" aria-selected="false" data-k="rest">餐廳・咖啡</button>
+    <button class="pk-tab" role="tab" aria-selected="false" data-k="spot">景點</button>
+  </div>
+  <div class="pk-filters">
+    <label class="pk-filter"><input type="checkbox" id="pkHideSeen" checked>隱藏去過的</label>
+    <label class="pk-filter"><input type="checkbox" id="pkSun">只看週日有營業</label>
+  </div>
+  <p class="map-note" id="pkCount" style="margin:0 0 10px"></p>
+  <div class="pk-list" id="pkList"></div>
+  <p class="map-note">推薦行程裡的多良車站（4.1）和黑潮甜品屋（129 則）不在前 20 名，標為「精選」保留。藍蜻蜓炸雞、林記臭豆腐、榕樹下米苔目等老店低於 4.3 分未列入。時間為「距台東市區約」的估算車程。</p>
+</section>
+
+<!-- 待辦 -->
+<section id="todo">
+  <h2><span class="dot" style="background:var(--yellow)"></span>出發前清單</h2>
+  <div class="card todo">
+    <div class="prog"><div class="bar"><i id="bar"></i></div><span id="progTxt">0 / 0</span></div>
+    <div id="todoList"></div>
+  </div>
+</section>
+
+<!-- 租車 -->
+<section id="stay">
+  <h2><span class="dot" style="background:var(--green)"></span>租車資訊</h2>
+  <div class="stays" id="stays"></div>
+</section>
+
+<footer>
+  <span class="ver" style="display:inline-block;border:2px solid #3E3A39;border-radius:999px;padding:0 10px;margin-bottom:6px;background:#FFFFFF">版本 2026/11/01・台東一日・景點地圖版</span><br>
+  景點與店家皆為 Google 地圖評分 4.1 以上（多良車站 4.1，其餘 4.2 以上）（2026 年 10 月資料）<br>
+  高鐵班次依交通小幫手 2026 時刻表，店家營業時間可能變動，出發前請再確認
+</footer>
+</main>
+
+<script>
+const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+/* ---------- 倒數 ---------- */
+const DEPART = new Date('2026-11-22T07:27:00+08:00');
+const RETURN = new Date('2026-11-22T22:40:00+08:00');
+function pad(n){return String(n).padStart(2,'0')}
+function tick(){
+  const now = new Date(), diff = DEPART - now;
+  const msg = document.getElementById('cd-msg');
+  if(diff <= 0){
+    ['d','h','m','s'].forEach(k=>document.getElementById('cd-'+k).textContent='00');
+    msg.textContent = now < RETURN ? '旅程進行中，玩得開心！' : '旅程結束，歡迎回家！';
+    return;
+  }
+  const s = Math.floor(diff/1000);
+  document.getElementById('cd-d').textContent = Math.floor(s/86400);
+  document.getElementById('cd-h').textContent = pad(Math.floor(s%86400/3600));
+  document.getElementById('cd-m').textContent = pad(Math.floor(s%3600/60));
+  document.getElementById('cd-s').textContent = pad(s%60);
+}
+tick(); setInterval(tick,1000);
+
+/* ---------- 交通標籤 ---------- */
+const T = {
+  hsr:  {label:'高鐵', bg:'#A8D3E6', icon:'■'},
+  road: {label:'南迴公路', bg:'#F2A497', icon:'▶'},
+  car:  {label:'自駕', bg:'#F6D27A', icon:'◆'},
+  stay: {label:'停留', bg:'#B9DAA5', icon:'●'}
+};
+document.getElementById('legend').innerHTML = Object.values(T)
+  .map(t=>`<span class="tg" style="background:${t.bg}"><i aria-hidden="true">${t.icon}</i>${t.label}</span>`).join('');
+
+/* ---------- 資料 ---------- */
+const DATA = {"pocket": {"snack": [{"n": "台東客來吃樂", "id": "ChIJTSs5txW5bzQRGZX_u1cA9Vs", "r": 4.5, "c": 3915, "lat": 22.75457, "lng": 121.145932, "h": "10:00–20:00", "area": "台東市", "min": 5, "way": false}, {"n": "寶桑豆花", "id": "ChIJ7aP3jDi5bzQREuVXoUd_qs0", "r": 4.5, "c": 3051, "lat": 22.751601, "lng": 121.152629, "h": "13:00–21:10", "area": "台東市", "min": 5, "way": false}, {"n": "阿咪米苔目", "id": "ChIJpWgClji5bzQROx5Ndw6fmAs", "r": 4.4, "c": 2926, "lat": 22.755396, "lng": 121.155282, "h": "07:30–15:00、17:00–20:30", "area": "台東市", "min": 5, "way": false}, {"n": "Chu Breakfast 早餐", "id": "ChIJ8yOw4BS5bzQRLHhwhy0xssg", "r": 4.6, "c": 1921, "lat": 22.757165, "lng": 121.144884, "h": "06:00–13:30", "area": "台東市", "min": 5, "way": false}, {"n": "Asan 阿三刨冰", "id": "ChIJLYHbVj65bzQRizd0BWa_yeg", "r": 4.6, "c": 1786, "lat": 22.754014, "lng": 121.150462, "h": "09:00–18:00", "area": "台東市", "min": 5, "way": false}, {"n": "大伯豆花", "id": "ChIJn3eIJA25bzQRl8qwSep2hXU", "r": 4.7, "c": 816, "lat": 22.751484, "lng": 121.153048, "h": "12:00–21:00", "area": "台東市", "min": 5, "way": false}, {"n": "麵線糊了 台東店", "id": "ChIJQRg9sTC5bzQRHTHqYXKcupc", "r": 4.8, "c": 753, "lat": 22.753253, "lng": 121.149729, "h": "06:30–19:00", "area": "台東市", "min": 5, "way": false}, {"n": "濟州冰菓", "id": "ChIJQZPhiz65bzQR4Kfz8-ir7MM", "r": 4.4, "c": 710, "lat": 22.752905, "lng": 121.151309, "h": "12:00–21:30", "area": "台東市", "min": 5, "way": false}, {"n": "NiHau 台式甜品", "id": "ChIJpzJqmYu5bzQRYnmLGVj7rKI", "r": 4.5, "c": 705, "lat": 22.75403, "lng": 121.152013, "h": "11:00–18:00", "area": "台東市", "min": 5, "way": false}, {"n": "昱禎臭豆腐", "id": "ChIJL5GgCxO5bzQRuwrgFrPpRuc", "r": 4.5, "c": 646, "lat": 22.746462, "lng": 121.13507, "h": "15:00–22:30", "area": "台東市", "min": 5, "way": false}, {"n": "劉媽媽古早味", "id": "ChIJy4Zvzg-5bzQRO2iQNP9bXCs", "r": 4.4, "c": 629, "lat": 22.751396, "lng": 121.136485, "h": "公休", "area": "台東市", "min": 5, "way": false}, {"n": "壹加壹蛋餅", "id": "ChIJ2yD6TQO5bzQRl7wjuvRB_kU", "r": 4.6, "c": 586, "lat": 22.743858, "lng": 121.13621, "h": "06:00–11:00", "area": "台東市", "min": 5, "way": false}, {"n": "阿憲冰店", "id": "ChIJCUuUGz65bzQRpy_gGFXnToM", "r": 4.4, "c": 567, "lat": 22.753651, "lng": 121.148795, "h": "15:00–22:00", "area": "台東市", "min": 5, "way": false}, {"n": "布魯蛋餅坊", "id": "ChIJGamd_Q65bzQRJyJUR4IoARc", "r": 4.5, "c": 560, "lat": 22.753241, "lng": 121.133432, "h": "06:00–11:00", "area": "台東市", "min": 5, "way": false}, {"n": "小莊米苔目（知本）", "id": "ChIJYW6MA-vJbzQRTfgxDoLKs6I", "r": 4.8, "c": 408, "lat": 22.705922, "lng": 121.051549, "h": "08:00–18:00", "area": "台東市", "min": 20, "way": false}, {"n": "Fried Chicken Master 炸雞", "id": "ChIJu1tyVMC5bzQRd30_EUqlvO8", "r": 4.7, "c": 356, "lat": 22.756152, "lng": 121.139136, "h": "11:00–01:00", "area": "台東市", "min": 5, "way": false}, {"n": "傳承手工蛋餅坊", "id": "ChIJdYTJRbC5bzQRpicK4Ir04a8", "r": 4.5, "c": 318, "lat": 22.759794, "lng": 121.144022, "h": "公休", "area": "台東市", "min": 5, "way": false}, {"n": "媽煮樓扁食", "id": "ChIJdVa42nu5bzQRLvgZbi8lsg4", "r": 4.6, "c": 216, "lat": 22.757335, "lng": 121.143541, "h": "11:00–14:00、17:00–20:00", "area": "台東市", "min": 5, "way": false}, {"n": "東味肉圓", "id": "ChIJ61DTZRW5bzQR6MXwf5kfWWw", "r": 4.6, "c": 207, "lat": 22.756422, "lng": 121.147731, "h": "11:30–18:30", "area": "台東市", "min": 5, "way": false}, {"n": "冰菓綠洲", "id": "ChIJP9rpzaO5bzQRIYkHIfxnsPg", "r": 4.8, "c": 205, "lat": 22.758005, "lng": 121.142074, "h": "公休", "area": "台東市", "min": 5, "way": false}], "rest": [{"n": "屋賀爺燒肉", "id": "ChIJ7eeqJ5O5bzQRVVdyOIh6Mo0", "r": 4.9, "c": 12055, "lat": 22.756398, "lng": 121.152473, "h": "11:30–14:30、17:00–24:00", "area": "台東市", "min": 5, "way": false}, {"n": "長生塩人 拉麵", "id": "ChIJNXoBRCi5bzQR6T0uuJWF4Lw", "r": 4.9, "c": 5511, "lat": 22.755645, "lng": 121.15455, "h": "17:00–24:00", "area": "台東市", "min": 5, "way": false}, {"n": "葉氏海鮮", "id": "ChIJM-o2i5u5bzQRLn6szad60-0", "r": 4.6, "c": 4317, "lat": 22.760324, "lng": 121.156622, "h": "10:00–20:00", "area": "台東市", "min": 5, "way": false}, {"n": "MAHI MAHI TODAY 炸魚薯條", "id": "ChIJVai6CHq5bzQRhzyg_SnUKvc", "r": 4.5, "c": 4109, "lat": 22.772255, "lng": 121.131745, "h": "11:30–20:00", "area": "台東市", "min": 5, "way": false}, {"n": "樂烤和牛 燒烤", "id": "ChIJn2Zuja65bzQRlFVfkgMGt5A", "r": 4.5, "c": 2444, "lat": 22.751961, "lng": 121.148655, "h": "12:00–15:00、17:00–22:30", "area": "台東市", "min": 5, "way": false}, {"n": "南北餃子館", "id": "ChIJr7rWvj65bzQR8oeRUf1hUng", "r": 4.3, "c": 1904, "lat": 22.752529, "lng": 121.152796, "h": "11:00–14:00、17:00–20:30", "area": "台東市", "min": 5, "way": false}, {"n": "打鐵火鍋輕燒肉", "id": "ChIJbdThYz-5bzQRjlvzSPxcd00", "r": 4.6, "c": 1837, "lat": 22.756683, "lng": 121.151746, "h": "11:00–14:00、17:00–22:00", "area": "台東市", "min": 5, "way": false}, {"n": "燒肉MEN", "id": "ChIJif1q2Ua5bzQRaIOogRUBPv0", "r": 4.7, "c": 1827, "lat": 22.76216, "lng": 121.143006, "h": "11:30–23:00", "area": "台東市", "min": 5, "way": false}, {"n": "萬家鄉 原味料理", "id": "ChIJJ-3YCj-5bzQRmXfqMDtzKSc", "r": 4.3, "c": 1432, "lat": 22.756019, "lng": 121.151422, "h": "11:00–13:30、17:00–19:30", "area": "台東市", "min": 5, "way": false}, {"n": "Aylangol Art Cafe", "id": "ChIJzaA6t525bzQR4ZvdkzeREv8", "r": 4.9, "c": 1407, "lat": 22.764171, "lng": 121.150324, "h": "09:00–17:00", "area": "台東市", "min": 5, "way": false}, {"n": "Sam's Burger", "id": "ChIJJVgzuRK5bzQRkAmE4x9P4wY", "r": 4.5, "c": 1400, "lat": 22.753084, "lng": 121.148945, "h": "11:00–14:00、17:00–21:30", "area": "台東市", "min": 5, "way": false}, {"n": "哈拉麵", "id": "ChIJv4LmtT25bzQRePZwUb-fOh0", "r": 4.7, "c": 1387, "lat": 22.750578, "lng": 121.150677, "h": "11:00–14:00、17:00–20:30", "area": "台東市", "min": 5, "way": false}, {"n": "茶自點 台東旗艦店", "id": "ChIJO5vZCNu5bzQRrYhieWDL9fE", "r": 4.6, "c": 1346, "lat": 22.756483, "lng": 121.147779, "h": "11:30–20:30", "area": "台東市", "min": 5, "way": false}, {"n": "壟墨咖啡", "id": "ChIJ9Z2UBnm5bzQR1xN0aERJF7I", "r": 4.5, "c": 1163, "lat": 22.775745, "lng": 121.128444, "h": "10:30–17:30", "area": "台東市", "min": 5, "way": false}, {"n": "人x人 早午餐", "id": "ChIJnQRyVmq5bzQRdaMUh1wrmiI", "r": 4.5, "c": 1056, "lat": 22.76143, "lng": 121.145704, "h": "08:00–13:00", "area": "台東市", "min": 5, "way": false}, {"n": "Home's Kitchen 家常菜", "id": "ChIJmYyDFUC5bzQR69T8fe6Q3Cs", "r": 4.5, "c": 1004, "lat": 22.753984, "lng": 121.160309, "h": "11:30–14:00、17:30–20:30", "area": "台東市", "min": 5, "way": false}, {"n": "阿拉慕廚房", "id": "ChIJZ0zv2de5bzQRLB4SIw2i-Ho", "r": 4.5, "c": 900, "lat": 22.749461, "lng": 121.151724, "h": "11:30–14:30、17:30–21:30", "area": "台東市", "min": 5, "way": false}, {"n": "連發海產（富岡漁港）", "id": "ChIJo4xPu2q8bzQRtNEiKoiOdE0", "r": 4.5, "c": 845, "lat": 22.792504, "lng": 121.193871, "h": "09:00–16:00", "area": "台東市", "min": 10, "way": false}, {"n": "mita'ay", "id": "ChIJIXPzKi-5bzQR0YMDvvf6dMg", "r": 4.7, "c": 749, "lat": 22.752755, "lng": 121.147001, "h": "16:00–22:00", "area": "台東市", "min": 5, "way": false}, {"n": "義回生餓回熟 義大利麵", "id": "ChIJ-7rJKBa5bzQRXOWN1kcTadM", "r": 4.6, "c": 704, "lat": 22.759215, "lng": 121.143565, "h": "11:00–14:30、17:00–22:00", "area": "台東市", "min": 5, "way": false}], "spot": [{"n": "鹿野高台", "id": "ChIJAQAAADSkbzQR2E5XyomxUJo", "r": 4.5, "c": 27542, "lat": 22.916449, "lng": 121.121595, "h": "全天", "area": "鹿野鄉", "min": 35, "way": false}, {"n": "台東森林公園（琵琶湖）", "id": "ChIJx9oJH165bzQRHtM1Bkgvyyo", "r": 4.4, "c": 15915, "lat": 22.768176, "lng": 121.156259, "h": "07:00–18:00", "area": "台東市", "min": 5, "way": false}, {"n": "鐵花村", "id": "ChIJAzKH2hW5bzQRD7rKWL4N5KU", "r": 4.5, "c": 14973, "lat": 22.753357, "lng": 121.14605, "h": "17:00–22:00", "area": "台東市", "min": 5, "way": false}, {"n": "加路蘭", "id": "ChIJi-zWAl-8bzQROFZaLJml4oo", "r": 4.4, "c": 14607, "lat": 22.806366, "lng": 121.196997, "h": "全天", "area": "台東市", "min": 15, "way": false}, {"n": "小野柳", "id": "ChIJgS3U1LG5bzQRGuFTr11jV4A", "r": 4.4, "c": 13213, "lat": 22.794774, "lng": 121.19818, "h": "08:30–17:00", "area": "台東市", "min": 10, "way": false}, {"n": "史前文化博物館", "id": "ChIJgS3U1LG5bzQRAlR1EkfxCn0", "r": 4.5, "c": 10011, "lat": 22.760712, "lng": 121.091361, "h": "09:00–17:00", "area": "台東市", "min": 10, "way": false}, {"n": "知本國家森林遊樂區", "id": "ChIJz3XTnoHJbzQRPeHfWKc1twg", "r": 4.3, "c": 7544, "lat": 22.68745, "lng": 120.991278, "h": "07:30–17:30", "area": "卑南鄉", "min": 30, "way": false}, {"n": "台東海濱公園", "id": "ChIJw6tsODq5bzQRW_0HkVz6MSE", "r": 4.3, "c": 6877, "lat": 22.749256, "lng": 121.157554, "h": "全天", "area": "台東市", "min": 5, "way": false}, {"n": "活水湖", "id": "ChIJ7XzyAE25bzQRHMT043RH2cA", "r": 4.5, "c": 6589, "lat": 22.765211, "lng": 121.164766, "h": "09:00–18:00", "area": "台東市", "min": 5, "way": false}, {"n": "台東美術館", "id": "ChIJ4VPy9UG5bzQREpsTt1LXMQc", "r": 4.4, "c": 4691, "lat": 22.764304, "lng": 121.149912, "h": "09:00–12:00、13:30–17:00", "area": "台東市", "min": 5, "way": false}, {"n": "華源海灣", "id": "ChIJeQoYaRzJbzQRx6STU09tf1U", "r": 4.3, "c": 4485, "lat": 22.662527, "lng": 121.028941, "h": "全天", "area": "太麻里鄉", "min": 30, "way": true}, {"n": "紅葉谷綠能溫泉園區", "id": "ChIJm11uOBGvbzQRV0W9oy9g744", "r": 4.9, "c": 3852, "lat": 22.890666, "lng": 121.069286, "h": "11:00–21:00", "area": "延平鄉", "min": 30, "way": false}, {"n": "卑南遺址公園", "id": "ChIJi7Rd8S66bzQROY9pSA3h5S8", "r": 4.5, "c": 2691, "lat": 22.791874, "lng": 121.115824, "h": "09:00–17:00", "area": "台東市", "min": 10, "way": false}, {"n": "金崙海灘", "id": "ChIJGZdpwDnSbzQRPoaNqxUB5c4", "r": 4.5, "c": 2459, "lat": 22.530624, "lng": 120.968873, "h": "全天", "area": "太麻里鄉", "min": 55, "way": true}, {"n": "台東天后宮", "id": "ChIJl1xdb0e5bzQRMhZeUtJeuEU", "r": 4.7, "c": 2444, "lat": 22.756848, "lng": 121.155484, "h": "06:00–22:00", "area": "台東市", "min": 5, "way": false}, {"n": "熊都蘭文創園區", "id": "ChIJY_tBD_GibzQR4bltSKh7MHU", "r": 4.4, "c": 1635, "lat": 22.881713, "lng": 121.232154, "h": "09:00–17:00", "area": "東河鄉", "min": 30, "way": false}, {"n": "知本林道白龍瀑布", "id": "ChIJh9J9F8HJbzQRkWzvvKbwovg", "r": 4.5, "c": 1255, "lat": 22.7045, "lng": 121.01467, "h": "全天", "area": "卑南鄉", "min": 25, "way": false}, {"n": "金崙觀景台", "id": "ChIJFXlzUkzTbzQRTqiu1BcC0JQ", "r": 4.6, "c": 674, "lat": 22.534814, "lng": 120.967901, "h": "全天", "area": "太麻里鄉", "min": 55, "way": true}, {"n": "都蘭觀景台", "id": "ChIJd4jHXhyjbzQR9hr14i8NNWE", "r": 4.4, "c": 652, "lat": 22.872658, "lng": 121.23436, "h": "全天", "area": "東河鄉", "min": 30, "way": false}, {"n": "微光集 夜間市集", "id": "ChIJhx9sW1a5bzQRQ2GYN3cMBAo", "r": 4.9, "c": 599, "lat": 22.752401, "lng": 121.146931, "h": "17:00–22:00", "area": "台東市", "min": 5, "way": false}]}, "extra": [{"cat": "spot", "n": "多良車站", "id": "ChIJqza3KrrTbzQRv2vJUxBEm24", "r": 4.1, "c": 34736, "lat": 22.50752, "lng": 120.958849, "h": "08:00–17:00", "area": "太麻里鄉", "min": 55, "way": true}, {"cat": "snack", "n": "黑潮甜品屋", "id": "ChIJ2_COIkG5bzQRS91sGsBqGBs", "r": 4.9, "c": 129, "lat": 22.753451, "lng": 121.152133, "h": "11:00–21:00", "area": "台東市", "min": 5, "way": false}]};
+const POCKET = DATA.pocket;
+const CAT_NAME = {snack:'小吃', rest:'餐廳', spot:'景點'};
+const POOL = {};
+Object.entries(POCKET).forEach(([cat,list])=>list.forEach((x,i)=>{ POOL[x.id] = Object.assign({cat, rank:i+1}, x); }));
+DATA.extra.forEach(x=>{ POOL[x.id] = Object.assign({rank:'精選', extra:true}, x); });
+const byName = n => Object.values(POOL).find(x=>x.n===n);
+const ZY = {id:'ZY', n:'高鐵左營站', q:'台灣高鐵左營站', pid:'ChIJVXhMJCsFbjQR9-DVjEq6Ah0', lat:22.687311, lng:120.307356};
+const SOUTH_GATE = {lat:22.5075, lng:120.9588};   // 南迴進台東的位置（多良一帶）
+const HSR_GO = {no:'0603', dep:'07:27', arr:'08:50'};
+const HSR_BACK = {no:'0690', dep:'21:05', arr:'22:28'};
+const RETURN_CAR = 20, BOARD = 5;
+const DEFAULT_STAY = {snack:30, rest:60, spot:45};
+const STAY_OVERRIDE = {'多良車站':40,'媽煮樓扁食':30,'台東客來吃樂':30,'Aylangol Art Cafe':35,'小野柳':40,'加路蘭':20,'黑潮甜品屋':35,"mita'ay":55,'鹿野高台':60,'台東森林公園（琵琶湖）':60,'史前文化博物館':90,'知本國家森林遊樂區':90};
+function stayOf(x){ return STAY_OVERRIDE[x.n] || DEFAULT_STAY[x.cat]; }
+const DEFAULT_PLAN = {t:'09:10', stops:['多良車站','媽煮樓扁食','台東客來吃樂','Aylangol Art Cafe','小野柳','加路蘭','黑潮甜品屋',"mita'ay"].map(n=>{const x=byName(n); return {id:x.id, stay:stayOf(x)};})};
+
+/* ---------- 儲存 ---------- */
+const PLAN_KEY='taitung1d-plan-v1', SEEN_KEY='taitung1d-seen-v1';
+function load(k,def){ try{ const v=JSON.parse(localStorage.getItem(k)); return v||def; }catch(e){ return def; } }
+function save(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+let plan = load(PLAN_KEY, null);
+if(!plan || !plan.stops || plan.stops.some(s=>!POOL[s.id])) plan = JSON.parse(JSON.stringify(DEFAULT_PLAN));
+let seen = new Set(load(SEEN_KEY, []));
+
+/* ---------- 時間與距離 ---------- */
+const toMin = s => { const [h,m]=s.split(':').map(Number); return h*60+m; };
+const fmt = m => { m=Math.round(m); m=((m%1440)+1440)%1440; return `${pad(Math.floor(m/60))}:${pad(m%60)}`; };
+function km(a,b){ const toR=x=>x*Math.PI/180; const dLa=toR(b.lat-a.lat), dLo=toR(b.lng-a.lng);
+  const h=Math.sin(dLa/2)**2+Math.cos(toR(a.lat))*Math.cos(toR(b.lat))*Math.sin(dLo/2)**2; return 12742*Math.asin(Math.sqrt(h)); }
+function localMin(a,b){ return Math.max(5, Math.ceil(km(a,b)*1.2/50*60/5)*5); }
+function travel(a,b){
+  if(a.id===b.id) return {m:0, road:false};
+  if(a.id==='ZY' || b.id==='ZY'){ const o=a.id==='ZY'?b:a; return {m:120+(km(SOUTH_GATE,o)<2?0:localMin(SOUTH_GATE,o)), road:true}; }
+  return {m:localMin(a,b), road:false};
+}
+function ranges(h){
+  if(!h || h==='未提供') return null; if(h==='全天') return [[0,1440]]; if(h==='公休') return [];
+  return h.split('、').map(r=>{ let [s,e]=r.split('–').map(toMin); if(e<=s) e+=1440; return [s,e]; });
+}
+function hoursCheck(x, arr, dep){
+  const r=ranges(x.h); if(r===null) return null;
+  if(!r.length) return '週日公休';
+  if(r.some(([s,e])=>s<=arr && dep<=e)) return null;
+  if(r.every(([s,e])=>arr>=e)) return `可能已打烊（營業 ${x.h}）`;
+  const inOne=r.some(([s,e])=>s<=arr && arr<e);
+  if(!inOne){ const nx=r.find(([s])=>s>arr); if(nx) return `還沒開門（${fmt(nx[0])} 開）`; }
+  return `停留超過營業時間（${x.h}）`;
+}
+
+/* ---------- 排程計算 ---------- */
+function compute(){
+  let t=toMin(plan.t||'09:10'), prev=ZY;
+  const rows=[{type:'start', node:ZY, time:t}];
+  plan.stops.forEach((s,idx)=>{
+    const x=POOL[s.id], tr=travel(prev,x), arr=t+tr.m, dep=arr+s.stay;
+    rows.push({type:'stop', node:x, idx, tr, arr, dep, stay:s.stay, warn:hoursCheck(x,arr,dep)});
+    t=dep; prev=x;
+  });
+  const tr=travel(prev,ZY), arr=t+tr.m, ready=arr+RETURN_CAR, slack=toMin(HSR_BACK.dep)-BOARD-ready;
+  rows.push({type:'end', node:ZY, tr, arr, ready, slack, leave:t});
+  return rows;
+}
+
+/* ---------- Google 導航 ---------- */
+function nodeQ(x){ return x.id==='ZY' ? {q:x.q, id:x.pid} : {q:x.n.replace(/（.*?）/g,''), id:x.id}; }
+function gdir(o, d, way){
+  const e=encodeURIComponent; let u='https://www.google.com/maps/dir/?api=1&travelmode=driving';
+  if(o){ const a=nodeQ(o); u+=`&origin=${e(a.q)}&origin_place_id=${a.id}`; }
+  const b=nodeQ(d); u+=`&destination=${e(b.q)}&destination_place_id=${b.id}`;
+  if(way && way.length){ const w=way.map(nodeQ); u+=`&waypoints=${e(w.map(x=>x.q).join('|'))}&waypoint_place_ids=${e(w.map(x=>x.id).join('|'))}`; }
+  return u;
+}
+const short = x => x.id==='ZY' ? '左營站' : x.n.replace(/（.*?）/g,'');
+
+/* ---------- 插圖 ---------- */
+const S = 'stroke="#3E3A39" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"';
+const ICON = `<svg viewBox="0 0 84 66" ${S} aria-hidden="true"><path d="M0 40 H84 V66 H0Z" fill="#A8D3E6"/><path d="M0 34 L18 10 L36 34Z" fill="#B9DAA5"/><path d="M4 36 V26 A10 10 0 0 1 24 26 V36Z" fill="#FFFFFF"/><path d="M8 36 V27 A6 6 0 0 1 20 27 V36Z" fill="#3E3A39"/><line x1="0" y1="38" x2="84" y2="38"/><g class="ride" style="animation-duration:5s"><g transform="translate(34 22)"><rect x="0" y="0" width="34" height="14" rx="4" fill="#FFFFFF"/><rect x="1.5" y="9" width="31" height="3" fill="#F2A497" stroke="none"/><rect x="5" y="3" width="8" height="5" rx="1.5" fill="#A8D3E6" stroke-width="2"/><rect x="18" y="3" width="8" height="5" rx="1.5" fill="#A8D3E6" stroke-width="2"/></g></g></svg>`;
+
+/* ---------- 行程畫面 ---------- */
+const panel=document.getElementById('dayPanel'), live=document.getElementById('planLive');
+function tagHTML(k,txt){ return `<span class="tg" style="background:${T[k].bg}"><i aria-hidden="true">${T[k].icon}</i>${T[k].label}・${txt}</span>`; }
+function renderDay(animate){
+  const rows=compute(), end=rows[rows.length-1];
+  const ok=end.slack>=0;
+  panel.innerHTML = `
+    <div class="card dayhead">${ICON}<div><h3>11/22（日）台東一日・共 ${plan.stops.length} 站</h3><p>左營取車 ${plan.t} → 回左營 ${fmt(end.arr)}・${ok?`趕 21:05 高鐵還有 ${end.slack} 分緩衝`:`<b>趕不上 21:05 高鐵，差 ${-end.slack} 分</b>`}</p></div></div>
+    <div class="plan-ctl card">
+      <label>左營取車出發 <input type="time" id="startTime" value="${plan.t}"></label>
+      <button type="button" class="pbtn" id="autoOrder">自動排順序</button>
+      <button type="button" class="pbtn ghost" id="resetPlan">重設推薦行程</button>
+    </div>
+    <div class="tl">
+      <div class="it"><div class="card"><span class="time">${HSR_GO.dep} → ${HSR_GO.arr}</span><h4>新竹搭高鐵到左營</h4>
+        <div class="tags">${tagHTML('hsr',`${HSR_GO.no} 次・固定`)}</div></div></div>
+      <div class="it"><div class="card"><span class="time">${HSR_GO.arr} – ${plan.t}</span><h4>左營站取車</h4>
+        <div class="tags"><span class="rate">辦手續、檢查車況並拍照存證</span></div></div></div>
+      ${rows.filter(r=>r.type==='stop').map(r=>{ const x=r.node; return `
+      <div class="it${x.extra||(x.cat==='spot'&&x.rank<=5)?' must':''}"><div class="card">
+        <span class="time">${fmt(r.arr)} – ${fmt(r.dep)}</span>
+        <h4>${x.n}<span class="cat-b">${x.extra?'精選':CAT_NAME[x.cat]+' #'+x.rank}</span></h4>
+        ${r.warn?`<p class="warn">⚠ ${r.warn}</p>`:''}
+        <div class="tags">
+          ${tagHTML(r.tr.road?'road':'car',`約 ${r.tr.m} 分`)}
+          <span class="rate">Google ★${x.r}・週日 ${x.h}</span>
+          <a class="maplk" href="${gdir(null,x)}" target="_blank" rel="noopener">導航</a>
+        </div>
+        <div class="row-ctl">
+          <span class="stayc">停留
+            <button type="button" class="ic-btn" data-act="less" data-i="${r.idx}" title="停留減少 15 分" aria-label="${x.n} 停留減少 15 分">−</button>
+            <b>${r.stay}</b> 分
+            <button type="button" class="ic-btn" data-act="more" data-i="${r.idx}" title="停留增加 15 分" aria-label="${x.n} 停留增加 15 分">＋</button></span>
+          <span class="mv">
+            <button type="button" class="ic-btn" data-act="up" data-i="${r.idx}" title="往前移" aria-label="${x.n} 往前" ${r.idx===0?'disabled':''}>↑</button>
+            <button type="button" class="ic-btn" data-act="down" data-i="${r.idx}" title="往後移" aria-label="${x.n} 往後" ${r.idx===plan.stops.length-1?'disabled':''}>↓</button>
+            <button type="button" class="ic-btn del" data-act="del" data-i="${r.idx}" title="刪除" aria-label="從行程移除 ${x.n}">✕</button>
+          </span>
+        </div>
+      </div></div>`;}).join('')}
+      <div class="it"><div class="card"><span class="time">${fmt(end.leave)} → ${fmt(end.arr)}</span><h4>開回左營站</h4>
+        <div class="tags">${tagHTML('road',`約 ${end.tr.m} 分`)}<span class="rate">天黑後南迴山路慢慢開</span></div></div></div>
+      <div class="it"><div class="card"><span class="time">${fmt(end.arr)} – ${fmt(end.ready)}</span><h4>加油、還車</h4>
+        ${ok?'':`<p class="warn">⚠ 還車後已經 ${fmt(end.ready)}，趕不上 21:05 的高鐵。請刪掉一站、縮短停留，或提早出發。</p>`}
+        <div class="tags"><span class="rate">預留 ${RETURN_CAR} 分；進站至少留 ${BOARD} 分</span></div></div></div>
+      <div class="it must"><div class="card"><span class="time">${HSR_BACK.dep} → ${HSR_BACK.arr}</span><h4>搭高鐵回新竹</h4>
+        <div class="tags">${tagHTML('hsr',`${HSR_BACK.no} 次・每日行駛、有停新竹`)}</div></div></div>
+    </div>
+    ${plan.stops.length? '' : '<p class="pk-note">還沒有行程，到下方「口袋名單」按「＋加入」。</p>'}`;
+  if(animate && !reduce.matches){
+    panel.querySelectorAll('.dayhead, .it').forEach((el,k)=>{ el.style.animationDelay=(k*40)+'ms'; el.classList.add('pop'); });
+  }
+}
+function changed(msg, animate){
+  save(PLAN_KEY, plan);
+  renderDay(animate); renderPocket(false); renderNav(); renderSched(); drawMap(); if(typeof renderSpotMap==='function') renderSpotMap();
+  if(msg) live.textContent = msg;
+}
+panel.addEventListener('click', e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  const st=plan.stops;
+  if(b.id==='autoOrder'){ autoOrder(); return changed('已依距離重新排序', true); }
+  if(b.id==='resetPlan'){ if(confirm('要把行程重設成推薦行程嗎？')){ plan=JSON.parse(JSON.stringify(DEFAULT_PLAN)); changed('已重設為推薦行程', true); } return; }
+  const i=+b.dataset.i, act=b.dataset.act; if(isNaN(i)) return;
+  const name=POOL[st[i].id].n;
+  if(act==='up' && i>0){ [st[i-1],st[i]]=[st[i],st[i-1]]; changed(`${name} 往前移`); }
+  if(act==='down' && i<st.length-1){ [st[i+1],st[i]]=[st[i],st[i+1]]; changed(`${name} 往後移`); }
+  if(act==='less'){ st[i].stay=Math.max(10, st[i].stay-15); changed(`${name} 停留 ${st[i].stay} 分`); }
+  if(act==='more'){ st[i].stay=Math.min(300, st[i].stay+15); changed(`${name} 停留 ${st[i].stay} 分`); }
+  if(act==='del'){ st.splice(i,1); changed(`已移除 ${name}`); }
+});
+panel.addEventListener('change', e=>{
+  if(e.target.id==='startTime' && e.target.value){ plan.t=e.target.value; changed(`取車出發時間改為 ${e.target.value}`); }
+});
+function autoOrder(){
+  // 從南迴進台東的位置開始，依最近距離串起來
+  let cur=SOUTH_GATE; const left=[...plan.stops], out=[];
+  while(left.length){
+    let best=0, bd=Infinity;
+    left.forEach((s,k)=>{ const d=km(cur,POOL[s.id]); if(d<bd){bd=d;best=k;} });
+    const s=left.splice(best,1)[0]; out.push(s); cur=POOL[s.id];
+  }
+  plan.stops=out;
+}
+
+/* ---------- 口袋名單 ---------- */
+const pkList=document.getElementById('pkList'), hideSeen=document.getElementById('pkHideSeen'), openOnly=document.getElementById('pkSun');
+let pkCur='snack';
+const inPlan = id => plan.stops.some(s=>s.id===id);
+function renderPocket(anim){
+  const all=POCKET[pkCur];
+  const rows=all.filter(x=>!(hideSeen.checked && seen.has(x.id)) && !(openOnly.checked && x.h==='公休'));
+  const hidden=all.filter(x=>seen.has(x.id)).length;
+  document.getElementById('pkCount').textContent = `前 20 名中已標記去過 ${hidden} 個${hideSeen.checked&&hidden?'（已隱藏）':''}`;
+  pkList.innerHTML = rows.map(x=>{
+    const rank=all.indexOf(x)+1, gone=seen.has(x.id), there=inPlan(x.id), closed=x.h==='公休';
+    return `<div class="card pk${gone?' off':''}">
+      <span class="rk">${rank}</span>
+      <div class="pk-main"><div class="nm">${x.n}</div>
+        <div class="meta">
+          <span>★${x.r}・${x.c.toLocaleString()} 則</span>
+          <span class="${closed?'closed':'open'}">週日 ${x.h}</span>
+          <span>${x.area}・市區約 ${x.min} 分</span>
+          ${x.way?'<span class="way">南迴順路</span>':''}
+        </div>
+        <div class="pk-act">
+          <button type="button" class="pk-btn seen" data-act="seen" data-id="${x.id}" aria-pressed="${gone}">${gone?'✓ 去過':'去過'}</button>
+          ${there
+            ? `<button type="button" class="pk-btn in" data-act="rm" data-id="${x.id}" aria-label="從行程移除 ${x.n}">已在行程 ✕</button>`
+            : `<button type="button" class="pk-btn add" data-act="add" data-id="${x.id}" aria-label="把 ${x.n} 加入行程">＋加入</button>`}
+          <a class="pk-go" href="${gdir(null,POOL[x.id])}" target="_blank" rel="noopener">導航</a>
+        </div>
+      </div>
+    </div>`;}).join('') || '<p class="pk-note">這一類都標記去過了，取消勾選「隱藏去過的」可以再看到。</p>';
+  if(anim && !reduce.matches){ pkList.querySelectorAll('.pk').forEach((el,i)=>{el.style.animationDelay=(i*25)+'ms';el.classList.add('pop');}); }
+}
+document.querySelectorAll('.pk-tab').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.pk-tab').forEach(t=>t.setAttribute('aria-selected',t===b));
+  pkCur=b.dataset.k; renderPocket(true);
+}));
+hideSeen.addEventListener('change',()=>renderPocket(false));
+openOnly.addEventListener('change',()=>renderPocket(false));
+pkList.addEventListener('click', e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  const id=b.dataset.id, x=POOL[id];
+  if(b.dataset.act==='seen'){
+    if(seen.has(id)) seen.delete(id); else seen.add(id);
+    save(SEEN_KEY,[...seen]); renderPocket(false); renderSpotMap();
+    live.textContent = seen.has(id) ? `${x.n} 標記為去過` : `${x.n} 取消去過`;
+  }
+  if(b.dataset.act==='add'){ plan.stops.push({id, stay:stayOf(x)}); changed(`${x.n} 已加入行程，時間已重算（可按「自動排順序」）`, true); }
+  if(b.dataset.act==='rm'){ plan.stops=plan.stops.filter(s=>s.id!==id); changed(`已從行程移除 ${x.n}`); }
+});
+
+/* ---------- 分段導航（動態） ---------- */
+function renderNav(){
+  const nodes=[ZY, ...plan.stops.map(s=>POOL[s.id]), ZY], rows=compute(), segs=[];
+  for(let i=0;i<nodes.length-1;i+=4){
+    const end=Math.min(i+4, nodes.length-1);
+    segs.push({t:fmt(i===0?rows[0].time:rows[i].dep), o:nodes[i], d:nodes[end], w:nodes.slice(i+1,end)});
+  }
+  document.getElementById('navSegs').innerHTML = segs.map((s,i)=>`
+    <a class="navbtn" href="${gdir(s.o,s.d,s.w)}" target="_blank" rel="noopener">
+      <span class="no">${i+1}</span>
+      <span class="tx">${s.t}　${[s.o,...s.w,s.d].map(short).join(' → ')}<small>${s.w.length} 個中途點${s.o.id==='ZY'||s.d.id==='ZY'?'・含南迴公路':''}</small></span>
+      <span class="go">導航</span>
+    </a>`).join('');
+  document.getElementById('stopNav').innerHTML = plan.stops.map((s,i)=>`<a href="${gdir(null,POOL[s.id])}" target="_blank" rel="noopener">${i+1}. ${short(POOL[s.id])}</a>`).join('') + `<a href="${gdir(null,ZY)}" target="_blank" rel="noopener">左營站（還車）</a>`;
+}
+
+/* ---------- 完整時間表（動態） ---------- */
+function renderSched(){
+  const rows=compute(), end=rows[rows.length-1], out=[];
+  out.push([`${HSR_GO.dep} → ${HSR_GO.arr}`,'新竹 → 左營',`高鐵 ${HSR_GO.no} 次`,[['hsr','約 1 小時 23 分']]]);
+  out.push([`${HSR_GO.arr} – ${plan.t}`,'左營站取車','辦手續、檢查車況',[]]);
+  let prev=rows[0];
+  rows.forEach(r=>{
+    if(r.type!=='stop') return;
+    const leave=prev.type==='start'?prev.time:prev.dep;
+    out.push([`${fmt(leave)} → ${fmt(r.arr)}`, `${short(prev.node)} → ${short(r.node)}`, '', [[r.tr.road?'road':'car',`約 ${r.tr.m} 分`]]]);
+    out.push([`${fmt(r.arr)} – ${fmt(r.dep)}`, r.node.n, r.warn?('⚠ '+r.warn):`${r.node.extra?'精選':CAT_NAME[r.node.cat]+' #'+r.node.rank}・Google ★${r.node.r}`, [['stay',`${r.stay} 分`]]]);
+    prev=r;
+  });
+  out.push([`${fmt(end.leave)} → ${fmt(end.arr)}`, `${short(prev.node)} → 左營站`, '', [['road',`約 ${end.tr.m} 分`]]]);
+  out.push([`${fmt(end.arr)} – ${fmt(end.ready)}`,'加油、還車', end.slack>=0?`距 21:05 發車還有 ${end.slack} 分`:`⚠ 趕不上 21:05，差 ${-end.slack} 分`, []]);
+  out.push([`${HSR_BACK.dep} → ${HSR_BACK.arr}`,'左營 → 新竹',`高鐵 ${HSR_BACK.no} 次`,[['hsr','約 1 小時 23 分']]]);
+  document.getElementById('sched').innerHTML = out.map(([tm,pl,sm,tags])=>`
+    <div class="srow">
+      <span class="tm">${tm}</span>
+      <span class="pl">${pl}${sm?`<small>${sm}</small>`:''}</span>
+      ${tags.length?`<div class="tags">${tags.map(([k,t])=>tagHTML(k,t)).join('')}</div>`:''}
+    </div>`).join('');
+}
+
+/* ---------- 真實地圖（動態） ---------- */
+const SOUTH_LINK = [[22.6873,120.3074],[22.665,120.40],[22.64,120.47],[22.55,120.53],[22.45,120.57],[22.367,120.593],[22.29,120.63],[22.20,120.70],[22.24,120.78],[22.29,120.84],[22.34,120.88],[22.40,120.91],[22.46,120.94],[22.5075,120.9588]];
+let lmap=null, layer=null, fitted=false;
+function drawMap(){
+  if(!lmap || !window.L) return;
+  layer.clearLayers();
+  const rows=compute().filter(r=>r.type==='stop');
+  const line=[...SOUTH_LINK, ...rows.map(r=>[r.node.lat,r.node.lng]), ...[...SOUTH_LINK].reverse()];
+  L.polyline(line,{color:'#3E3A39',weight:8,opacity:.9}).addTo(layer);
+  L.polyline(line,{color:'#A8D3E6',weight:4.5}).addTo(layer);
+  const pts=[];
+  rows.forEach((r,i)=>{
+    const x=r.node;
+    const icon=L.divIcon({className:'', html:`<div class="mk">${i+1}</div>`, iconSize:[28,28], iconAnchor:[14,14], popupAnchor:[0,-14]});
+    L.marker([x.lat,x.lng],{icon, title:x.n, keyboard:true}).addTo(layer)
+      .bindPopup(`<b>${i+1}. ${x.n}</b>${fmt(r.arr)} – ${fmt(r.dep)}<br>Google ★${x.r}${r.warn?'<br>⚠ '+r.warn:''}<br><a class="pop-nav" href="${gdir(null,x)}" target="_blank" rel="noopener">Google 導航</a>`);
+    pts.push([x.lat,x.lng]);
+  });
+  const zi=L.divIcon({className:'', html:'<div class="mk hsr">鐵</div>', iconSize:[28,28], iconAnchor:[14,14], popupAnchor:[0,-14]});
+  L.marker([ZY.lat,ZY.lng],{icon:zi,title:'高鐵左營站'}).addTo(layer).bindPopup(`<b>高鐵左營站</b>${plan.t} 取車出發<br>還車後搭 21:05 高鐵<br><a class="pop-nav" href="${gdir(null,ZY)}" target="_blank" rel="noopener">Google 導航</a>`);
+  pts.push([ZY.lat,ZY.lng]);
+  if(!fitted){ lmap.fitBounds(L.latLngBounds(pts).pad(0.08)); fitted=true; }
+}
+window.addEventListener('load', function(){
+  const box=document.getElementById('realMap');
+  if(!window.L){ box.innerHTML='<p class="fail">地圖載入失敗，請直接用下方的 Google 地圖導航按鈕。</p>'; return; }
+  lmap=L.map(box,{scrollWheelZoom:false, zoomAnimation:!reduce.matches, fadeAnimation:!reduce.matches, markerZoomAnimation:!reduce.matches});
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18, attribution:'&copy; OpenStreetMap contributors'}).addTo(lmap);
+  layer=L.layerGroup().addTo(lmap);
+  drawMap();
+  document.getElementById('fitMap').addEventListener('click',()=>{ fitted=false; drawMap(); });
+});
+
+/* ---------- 路線圖：減少動態效果時小車停住 ---------- */
+(function(){
+  const car=document.getElementById('mapCar'); if(!car) return;
+  const anim=car.querySelector('animateMotion');
+  if(reduce.matches && anim){ anim.remove(); car.setAttribute('transform','translate(38 131)'); }
+})();
+
+renderDay(false); renderPocket(false); renderNav(); renderSched();
+
+/* ---------- 景點地圖（插畫風、點名稱加入行程） ---------- */
+const SPOTMAP = {
+  county: {
+    title:'台東縣總覽', bounds:{n:22.945, s:22.48, w:120.90, e:121.275},
+    items:[
+      ['鹿野高台','鹿野高台','熱氣球草原'],
+      ['紅葉谷綠能溫泉園區','紅葉谷溫泉','溫泉泡腳'],
+      ['卑南遺址公園','卑南遺址公園','史前遺址'],
+      ['史前文化博物館','史前館','博物館・室內'],
+      ['知本林道白龍瀑布','白龍瀑布','林道瀑布'],
+      ['知本國家森林遊樂區','知本森林','森林步道'],
+      ['熊都蘭文創園區','熊都蘭文創','都蘭糖廠'],
+      ['加路蘭','加路蘭','海岸草地'],
+      ['小野柳','小野柳','奇岩海岸'],
+      ['華源海灣','華源海灣','心型海灣'],
+      ['金崙海灘','金崙海灘','南迴黑沙灘'],
+      ['多良車站','多良車站','南迴最美車站']
+    ]
+  },
+  city: {
+    title:'台東市區放大圖', bounds:{n:22.7725, s:22.7465, w:121.1405, e:121.1685},
+    items:[
+      ['燒肉MEN','燒肉MEN','日式燒肉'],
+      ['Chu Breakfast 早餐','Chu 早餐','在地早餐'],
+      ['Aylangol Art Cafe','Aylangol','咖啡・美術館旁'],
+      ['台東客來吃樂','客來吃樂','蚵仔麵線'],
+      ['Asan 阿三刨冰','阿三刨冰','水果刨冰'],
+      ['鐵花村','鐵花村','晚上音樂市集'],
+      ["mita'ay","mita'ay",'原民套餐'],
+      ['台東森林公園（琵琶湖）','森林公園','琵琶湖騎車'],
+      ['活水湖','活水湖','湖畔散步'],
+      ['葉氏海鮮','葉氏海鮮','生魚片'],
+      ['台東天后宮','天后宮','百年廟宇'],
+      ['長生塩人 拉麵','長生塩人','拉麵 17:00 開'],
+      ['屋賀爺燒肉','屋賀爺燒肉','人氣燒肉'],
+      ['寶桑豆花','寶桑豆花','古早味豆花']
+    ]
+  }
+};
+const SWEET = /豆花|冰|咖啡|Cafe|甜品/;
+function kindOf(x){ return x.cat==='spot' ? 'spot' : (SWEET.test(x.n) ? 'sweet' : 'food'); }
+const KIND = {spot:{c:'#B9DAA5', t:'景點'}, food:{c:'#F2A497', t:'美食'}, sweet:{c:'#F6D27A', t:'咖啡甜點'}};
+const fmtCount = c => c>=10000 ? (c/10000).toFixed(1).replace(/\.0$/,'')+'萬' : c.toLocaleString();
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/'/g,'&#39;');
+
+function spotPanelSVG(key, startNo){
+  const P = SPOTMAP[key], W=380, LW=104, GAP=6, MX0=LW+GAP+4, MX1=W-LW-GAP-4;
+  const b=P.bounds, kmW=(b.e-b.w)*111*Math.cos(22.75*Math.PI/180), kmH=(b.n-b.s)*111;
+  const mapW=MX1-MX0, mapH=mapW*kmH/kmW;
+  const rows=Math.ceil(P.items.length/2), slot=62, top=44, LH=52;
+  const H=Math.max(top+rows*slot+20, top+mapH+30);
+  const MY0=top+(H-top-10-mapH)/2;
+  const pj=(lat,lng)=>[MX0+(lng-b.w)/(b.e-b.w)*mapW, MY0+(b.n-lat)/(b.n-b.s)*mapH];
+  const pts=P.items.map(([n,short,note],i)=>{ const x=byName(n); const [px,py]=pj(x.lat,x.lng); return {x,short,note,px,py}; });
+  // 左右分邊：依經度中位數分，再依 y 排序
+  const sorted=[...pts].sort((a,b)=>a.px-b.px), half=Math.ceil(pts.length/2);
+  const L=sorted.slice(0,half).sort((a,b)=>a.py-b.py), R=sorted.slice(half).sort((a,b)=>a.py-b.py);
+  const place=(arr,side)=>arr.forEach((p,i)=>{
+    const span=(H-top-16), step=span/arr.length;
+    p.ly=top+step*i+(step-LH)/2; p.lx= side==='L' ? 4 : W-LW-4; p.side=side;
+  });
+  place(L,'L'); place(R,'R');
+  let no=startNo; [...L,...R].sort((a,b)=>a.side===b.side?a.ly-b.ly:(a.side==='L'?-1:1)).forEach(p=>p.no=no++);
+  // 地形
+  let terrain='';
+  if(key==='county'){
+    const coast=[[22.945,121.300],[22.90,121.262],[22.86,121.232],[22.83,121.214],[22.80,121.204],[22.78,121.188],[22.758,121.168],[22.745,121.145],[22.725,121.105],[22.705,121.072],[22.68,121.045],[22.64,121.028],[22.60,121.008],[22.56,120.988],[22.52,120.968],[22.48,120.950]];
+    const land=coast.map(([a,c])=>pj(a,c)).map(p=>p.join(',')).join(' ')+` ${MX0},${MY0+mapH} ${MX0},${MY0}`;
+    const r9=[[22.94,121.13],[22.90,121.12],[22.84,121.11],[22.79,121.12],[22.762,121.14],[22.735,121.11],[22.70,121.06],[22.62,121.012],[22.56,120.985],[22.50,120.958]].map(([a,c])=>pj(a,c).join(',')).join(' ');
+    const r11=[[22.762,121.15],[22.79,121.19],[22.83,121.208],[22.88,121.236],[22.94,121.28]].map(([a,c])=>pj(a,c).join(',')).join(' ');
+    const mt=(lat,lng,s)=>{const [x,y]=pj(lat,lng);return `<path d="M${x-s} ${y} L${x} ${y-s*1.5} L${x+s} ${y}Z" fill="#FFFCF6"/>`;};
+    const town=(t,lat,lng)=>{const [x,y]=pj(lat,lng);return `<text x="${x}" y="${y}" font-size="9" text-anchor="middle" fill="#3E3A39" stroke="none" opacity=".7">${t}</text>`;};
+    const [gx,gy]=pj(22.67,121.27);
+    const [bx,by]=pj(22.80,120.95);
+    terrain=`<rect x="${MX0}" y="${MY0}" width="${mapW}" height="${mapH}" rx="14" fill="#A8D3E6" stroke="none"/>
+      <polygon points="${land}" fill="#B9DAA5"/>
+      <g stroke-width="2">${mt(22.86,120.95,9)}${mt(22.83,120.97,7)}${mt(22.62,120.93,9)}${mt(22.58,120.95,7)}${mt(22.75,120.95,8)}</g>
+      <polyline points="${r9}" fill="none" stroke="#FFFFFF" stroke-width="4"/><polyline points="${r9}" fill="none" stroke-width="1.5" stroke-dasharray="3 4"/>
+      <polyline points="${r11}" fill="none" stroke="#FFFFFF" stroke-width="4"/><polyline points="${r11}" fill="none" stroke-width="1.5" stroke-dasharray="3 4"/>
+      ${town('台東市',22.772,121.115)}${town('卑南鄉',22.84,121.03)}${town('鹿野鄉',22.905,121.17)}${town('太麻里',22.60,120.975)}${town('東河鄉',22.918,121.21)}
+      <text x="${MX1-6}" y="${MY0+mapH-10}" font-size="10" text-anchor="end" fill="#3E3A39" stroke="none" opacity=".6">太平洋</text>
+      <g class="float" transform="translate(${bx-8} ${by-12})"><path d="M8 18 C0 18 0 4 8 1 C16 4 16 18 8 18Z" fill="#F2A497" stroke-width="2"/><rect x="5" y="20" width="6" height="4" rx="1" fill="#FFFFFF" stroke-width="1.5"/></g>`;
+  } else {
+    const coast=[[22.7725,121.1725],[22.7705,121.1715],[22.765,121.169],[22.758,121.1665],[22.752,121.1635],[22.7485,121.1605],[22.7465,121.1590]];
+    const land=coast.map(([a,c])=>pj(a,c).join(',')).join(' ')+` ${MX0},${MY0+mapH} ${MX0},${MY0}`;
+    const road=(arr)=>{const s=arr.map(([a,c])=>pj(a,c).join(',')).join(' ');return `<polyline points="${s}" fill="none" stroke="#FFFFFF" stroke-width="5"/>`;};
+    const [lx,ly]=pj(22.7682,121.1590), [sx,sy]=pj(22.751,121.1675);
+    terrain=`<rect x="${MX0}" y="${MY0}" width="${mapW}" height="${mapH}" rx="14" fill="#A8D3E6" stroke="none"/>
+      <polygon points="${land}" fill="#FBEBC0" stroke="none"/>
+      ${road([[22.7705,121.150],[22.7485,121.149]])}${road([[22.758,121.1405],[22.754,121.1640]])}${road([[22.766,121.1405],[22.762,121.166]])}${road([[22.7705,121.157],[22.7485,121.1555]])}
+      <ellipse cx="${lx}" cy="${ly}" rx="12" ry="8" fill="#A8D3E6" stroke-width="2"/>
+      <text x="${MX1-6}" y="${MY0+mapH-8}" font-size="9" text-anchor="end" fill="#3E3A39" stroke="none" opacity=".6">太平洋</text>`;
+  }
+  const lines=[...L,...R].map(p=>{
+    const ax = p.side==='L' ? p.lx+LW : p.lx, ay=p.ly+LH/2;
+    return `<polyline points="${ax},${ay} ${p.side==='L'?ax+6:ax-6},${ay} ${p.px},${p.py}" fill="none" stroke="#3E3A39" stroke-width="1.3" opacity=".55"/>`;
+  }).join('');
+  const dots=[...L,...R].map(p=>`<circle cx="${p.px}" cy="${p.py}" r="4.5" fill="${KIND[kindOf(p.x)].c}" stroke-width="2"/>`).join('');
+  const labels=[...L,...R].map(p=>{
+    const x=p.x, inP=inPlan(x.id), gone=seen.has(x.id), k=KIND[kindOf(x)];
+    const tip=`${x.n}・Google ★${x.r}・${x.c.toLocaleString()} 則評論・${inP?'已在行程，點一下移出':'點一下加入行程'}`;
+    return `<g class="sm-lab${inP?' on':''}${gone?' gone':''}" data-id="${x.id}" role="button" tabindex="0" aria-pressed="${inP}" aria-label="${esc(tip)}">
+      <title>${esc(tip)}</title>
+      <rect x="${p.lx}" y="${p.ly}" width="${LW}" height="${LH}" rx="12" fill="${inP?'#F6D27A':'#FFFFFF'}" stroke-width="2"/>
+      <circle cx="${p.lx+13}" cy="${p.ly+13}" r="8.5" fill="${k.c}" stroke-width="1.8"/>
+      <text x="${p.lx+13}" y="${p.ly+16.5}" font-size="9.5" text-anchor="middle" fill="#3E3A39" stroke="none">${p.no}</text>
+      <text x="${p.lx+25}" y="${p.ly+17}" font-size="11.5" fill="#3E3A39" stroke="none">${esc(p.short)}${inP?' ✓':''}</text>
+      <text x="${p.lx+8}" y="${p.ly+32}" font-size="9.5" fill="#3E3A39" stroke="none">★${x.r}・${fmtCount(x.c)} 則</text>
+      <text x="${p.lx+8}" y="${p.ly+45}" font-size="8.8" fill="#3E3A39" stroke="none" opacity=".75">${esc(p.note)}</text>
+    </g>`;
+  }).join('');
+  return {no, svg:`<svg viewBox="0 0 ${W} ${Math.ceil(H)}" role="group" aria-label="${P.title}" stroke="#3E3A39" stroke-linejoin="round" stroke-linecap="round" font-family="Huninn,sans-serif">
+    <text x="${W/2}" y="26" font-size="16" text-anchor="middle" fill="#3E3A39" stroke="none">${P.title}</text>
+    <path d="M${W/2-58} 33 H${W/2+58}" stroke="#F2A497" stroke-width="5" opacity=".7"/>
+    <defs><clipPath id="clip-${key}"><rect x="${MX0}" y="${MY0}" width="${mapW}" height="${mapH}" rx="14"/></clipPath></defs>
+    <g clip-path="url(#clip-${key})">${terrain}</g>
+    <rect x="${MX0}" y="${MY0}" width="${mapW}" height="${mapH}" rx="14" fill="none" stroke-width="2.5"/>
+    ${lines}${dots}${labels}</svg>`};
+}
+function renderSpotMap(){
+  const a=spotPanelSVG('county',1), b=spotPanelSVG('city',a.no);
+  document.getElementById('smCounty').innerHTML=a.svg;
+  document.getElementById('smCity').innerHTML=b.svg;
+}
+function toggleFromMap(id){
+  const x=POOL[id]; if(!x) return;
+  if(inPlan(id)){ plan.stops=plan.stops.filter(s=>s.id!==id); changed(`已從行程移除 ${x.n}`); }
+  else { plan.stops.push({id, stay:stayOf(x)}); changed(`${x.n} 已加入行程，時間已重算（可按「自動排順序」）`); }
+}
+['smCounty','smCity'].forEach(idn=>{
+  const el=document.getElementById(idn);
+  el.addEventListener('click',e=>{ const g=e.target.closest('.sm-lab'); if(g) toggleFromMap(g.dataset.id); });
+  el.addEventListener('keydown',e=>{ if(e.key!=='Enter'&&e.key!==' ') return; const g=e.target.closest('.sm-lab'); if(!g) return; e.preventDefault(); const id=g.dataset.id; toggleFromMap(id); const again=document.querySelector(`.sm-lab[data-id="${id}"]`); if(again) again.focus(); });
+});
+renderSpotMap();
+
+
+/* ---------- 待辦清單 ---------- */
+const TODO = [
+  ['高鐵去程 0603 次（07:27）','週日早班車提早訂'],
+  ['高鐵回程 0690 次（21:05 → 新竹 22:28）','週日晚上北上很滿，一開賣就訂'],
+  ['預約左營站租車','確認 09:10 取車、20:50 前還車的營業時間'],
+  ['駕照・身分證','租車取車要用'],
+  ['出發前查台 9 線路況','南迴偶有施工或落石'],
+  ['確認店家當天有營業','客來吃樂店休不固定，看粉專'],
+  ['暈車藥','南迴山路彎道多'],
+  ['薄外套・帽子・防曬','海邊風大、太陽強'],
+  ['現金','小吃店、單車租借多收現金'],
+  ['保冷袋（可選）','想帶甜點或伴手禮回家'],
+  ['行動電源・車充','']
+];
+const KEY='taitung-trip-todo';
+let done = load(KEY, {});
+const check = `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5 L6.5 12 L13 4.5" fill="none" stroke="#3E3A39" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+document.getElementById('todoList').innerHTML = TODO.map(([t,s],i)=>`
+  <label class="chk"><input type="checkbox" data-i="${i}" ${done[i]?'checked':''}><span class="box">${check}</span>
+  <span class="txt">${t}${s?`<small>${s}</small>`:''}</span></label>`).join('');
+function prog(){
+  const boxes=[...document.querySelectorAll('#todoList input')];
+  const n=boxes.filter(b=>b.checked).length;
+  document.getElementById('bar').style.width=(n/boxes.length*100)+'%';
+  document.getElementById('progTxt').textContent=`${n} / ${boxes.length}`;
+}
+document.getElementById('todoList').addEventListener('change',e=>{ done[e.target.dataset.i]=e.target.checked; save(KEY,done); prog(); });
+prog();
+
+/* ---------- 租車資訊 ---------- */
+const carIcon = `<svg viewBox="0 0 40 40" width="38" height="38" ${S} aria-hidden="true"><path d="M4 26 V19 Q4 16 7 16 H11 L15 10 H26 L30 16 H33 Q36 16 36 19 V26Z" fill="#F6D27A"/><circle cx="12" cy="27" r="4" fill="#FFFFFF"/><circle cx="28" cy="27" r="4" fill="#FFFFFF"/></svg>`;
+document.getElementById('stays').innerHTML = [
+  {n:'取車・高鐵左營站', c:'#A8D3E6', when:'11/22（日）09:10 左右', f:['車站周邊有多家租車公司','先預約','取車拍照存證']},
+  {n:'還車・高鐵左營站', c:'#B9DAA5', when:'11/22（日）20:50 前', f:['加滿油再還','預留 20 分鐘','趕 21:05 高鐵']}
+].map(s=>`
+  <article class="card stay">
+    <div class="ic" style="background:${s.c}">${carIcon}</div>
+    <div><h4>${s.n}</h4><p>${s.when}</p><ul>${s.f.map(x=>`<li class="pill">${x}</li>`).join('')}</ul></div>
+  </article>`).join('');
+
+/* ---------- 選單高亮 ---------- */
+const links=[...document.querySelectorAll('.nav a.lk')];
+const io=new IntersectionObserver(es=>{
+  es.forEach(e=>{ if(e.isIntersecting){ links.forEach(l=>l.classList.toggle('on', l.getAttribute('href')==='#'+e.target.id)); } });
+},{rootMargin:'-45% 0px -50% 0px'});
+document.querySelectorAll('main section').forEach(s=>io.observe(s));
+</script>
+</body>
+</html>
