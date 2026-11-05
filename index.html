@@ -255,6 +255,26 @@ footer{text-align:center;font-size:.8rem;opacity:.75;padding:30px 0 40px}
 .theme-b small{font-size:.74rem;opacity:.75}
 .theme-b[aria-pressed="true"]{background:#F6D27A}
 </style>
+<style>
+.route-check{padding:14px 16px}
+.rc-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.rc-head p{margin:0;font-weight:700}
+.rc-v{flex:none;border:3px solid var(--ink);border-radius:999px;padding:2px 14px;font-weight:700;font-size:1.05rem}
+.rc-v.ok{background:#B9DAA5}.rc-v.mid{background:#F6D27A}.rc-v.bad{background:#F2A497}
+.rc-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.rc-stats div{border:2.5px solid var(--ink);border-radius:14px;padding:6px 10px;background:#FFFFFF}
+.rc-stats b{font-size:1.3rem}
+.rc-stats small{display:block;font-size:.76rem;opacity:.8;line-height:1.3}
+.rc-road{font-size:.85rem;margin:0 0 8px}
+.rc-ok{font-size:.85rem;align-self:center}
+.rc-opt{margin-top:12px;border-top:2px dashed var(--ink);padding-top:10px}
+.rc-opt h4{margin:0 0 6px}
+.rc-opt ol{margin:0 0 6px;padding-left:1.5em}
+.rc-opt li{padding:2px 0}
+.rc-opt li.mv{font-weight:700}
+.rc-opt li em{font-style:normal;font-size:.72rem;background:#F6D27A;border:2px solid var(--ink);border-radius:999px;padding:0 6px;margin-left:4px}
+.rc-note{font-size:.8rem;opacity:.8;margin:0 0 8px}
+</style>
 
 </head>
 <body>
@@ -363,6 +383,7 @@ footer{text-align:center;font-size:.8rem;opacity:.75;padding:30px 0 40px}
       <li><span class="ic-btn demo del">✕</span>從行程刪除這一站</li>
       <li><span class="ic-btn demo">−</span><span class="ic-btn demo">＋</span>停留時間每次減少或增加 15 分鐘</li>
       <li><span class="pbtn demo">自動排順序</span>站不變，只依距離重新排順序</li>
+      <li><span class="pbtn demo">🗺 一鍵看路線圖</span>跳到地圖畫出實際道路，判斷順不順，並給一個比較順的順序可以一鍵套用</li>
       <li><span class="pbtn demo ghost">重新安排推薦行程</span>排除去過的點，重新挑選、排出整天行程</li>
       <li><span class="pk-btn demo add">＋加入</span><span class="pk-btn demo">去過</span>在口袋名單加點、排除去過的</li>
     </ul>
@@ -376,7 +397,9 @@ footer{text-align:center;font-size:.8rem;opacity:.75;padding:30px 0 40px}
 <!-- 導航 -->
 <section id="route">
   <h2><span class="dot" style="background:var(--sky)"></span>路線與導航</h2>
-  <h3 class="sched-title" style="margin-top:0">真實地圖</h3>
+  <h3 class="sched-title" style="margin-top:0">路線順不順？</h3>
+  <div class="card route-check" id="routeCheck" aria-live="polite"></div>
+  <h3 class="sched-title">真實地圖</h3>
   <div class="card real-map" id="realMap" role="region" aria-label="可縮放的真實地圖"></div>
   <p class="map-note">跟著「我的行程」即時更新；點編號看時間並開啟 Google 導航，「科」是竹科（出發點），虛線圈約為 40 分鐘車程。<button type="button" class="pbtn mini" id="fitMap">重新置中</button></p>
   <h3 class="sched-title">Google 地圖分段導航</h3>
@@ -416,7 +439,7 @@ footer{text-align:center;font-size:.8rem;opacity:.75;padding:30px 0 40px}
 </section>
 
 <footer>
-  <span class="ver" style="display:inline-block;border:2px solid #3E3A39;border-radius:999px;padding:0 10px;margin-bottom:6px;background:#FFFFFF">版本 2026/11/05・三個男生・竹科 40 分鐘版</span><br>
+  <span class="ver" style="display:inline-block;border:2px solid #3E3A39;border-radius:999px;padding:0 10px;margin-bottom:6px;background:#FFFFFF">版本 2026/11/05・三個男生・一鍵路線圖版</span><br>
   景點與店家為 Google 地圖資料（2026 年 11 月）<br>
   車程為直線距離估算，營業時間可能變動，出發前請再確認
 </footer>
@@ -642,6 +665,7 @@ function renderDay(animate){
     <div class="plan-ctl card">
       <label>出發時間 <input type="time" id="startTime" value="${plan.t}"></label>
       <button type="button" class="pbtn" id="autoOrder">自動排順序</button>
+      <button type="button" class="pbtn" id="goRoute">🗺 一鍵看路線圖</button>
       <button type="button" class="pbtn ghost" id="resetPlan">重新安排推薦行程</button>
       <div class="themes" role="group" aria-label="推薦行程主題"><span>推薦主題</span>${THEMES.map(([k,n])=>`<button type="button" class="pk-btn theme-b" data-theme="${k}" aria-pressed="${plan.auto && (plan.theme||'')===k}">${n}<small>${THEME_NOTE[k]}</small></button>`).join('')}</div>
     </div>
@@ -682,7 +706,7 @@ function renderDay(animate){
 }
 function changed(msg, animate){
   save(PLAN_KEY, plan);
-  renderDay(animate); renderPocket(false); renderNav(); renderSched(); drawMap(); renderSpotMap();
+  renderDay(animate); renderPocket(false); renderNav(); renderSched(); drawMap(); renderSpotMap(); renderRouteCheck();
   if(msg) live.textContent = msg;
 }
 function replan(msg){ plan=bestPlan(plan.base||plan.t, plan.theme); changed(msg||'已重新安排推薦行程（排除去過的點）', true); }
@@ -699,6 +723,7 @@ panel.addEventListener('click', e=>{
   const st=plan.stops;
   if(b.dataset.theme!=null && b.classList.contains('theme-b')){ const k=b.dataset.theme;
     if(plan.auto || confirm('要用主題推薦行程取代你自己排的行程嗎？')){ plan=bestPlan(plan.base||plan.t, k); changed(`已換成「${THEMES.find(t=>t[0]===k)[1]}」推薦行程`, true); } return; }
+  if(b.id==='goRoute'){ showRoute(); return; }
   if(b.id==='autoOrder'){ autoOrder(); plan.auto=false; return changed('已依距離重新排序', true); }
   if(b.id==='resetPlan' || b.id==='replanBtn'){ if(plan.auto || confirm('要用推薦行程取代你自己排的行程嗎？')) replan(); return; }
   if(b.id==='dropSeen'){ plan.stops=st.filter(s=>!seen.has(s.id)); return changed('已移除去過的站'); }
@@ -815,8 +840,20 @@ function drawMap(){
   layer.clearLayers();
   const rows=compute().filter(r=>r.type==='stop');
   const line=[[HOME.lat,HOME.lng], ...rows.map(r=>[r.node.lat,r.node.lng]), [HOME.lat,HOME.lng]];
-  L.polyline(line,{color:'#3E3A39',weight:8,opacity:.9}).addTo(layer);
-  L.polyline(line,{color:'#F2A497',weight:4.5}).addTo(layer);
+  const geo=roadCache[routeKey()];
+  if(geo && geo.coords){
+    L.polyline(geo.coords,{color:'#3E3A39',weight:8,opacity:.9}).addTo(layer);
+    L.polyline(geo.coords,{color:'#A8D3E6',weight:4.5}).addTo(layer);
+  } else {
+    // 直線示意：每一段依車程上色，超過 30 分鐘的段用紅色虛線提醒
+    const legs=[...rows.map(r=>r.tr.m), compute().slice(-1)[0].tr.m];
+    for(let i=0;i<line.length-1;i++){
+      const long=legs[i]>=30;
+      L.polyline([line[i],line[i+1]],{color:'#3E3A39',weight:8,opacity:.9}).addTo(layer);
+      L.polyline([line[i],line[i+1]],{color:long?'#D9534F':'#F2A497',weight:4.5,dashArray:long?'8 6':null}).addTo(layer)
+        .bindTooltip(`第 ${i+1} 段・約 ${legs[i]} 分`,{sticky:true});
+    }
+  }
   const pts=[[HOME.lat,HOME.lng]];
   rows.forEach((r,i)=>{
     const x=r.node;
@@ -830,6 +867,115 @@ function drawMap(){
   L.circle([HOME.lat,HOME.lng],{radius:21000,color:'#3E3A39',weight:1.5,dashArray:'6 6',fill:false}).addTo(layer);
   if(!fitted){ lmap.fitBounds(L.latLngBounds(pts).pad(0.12)); fitted=true; }
 }
+/* ---------- 一鍵路線圖：檢查順不順、產生更順的路線 ---------- */
+const roadCache={};
+const routeKey=()=>plan.stops.map(s=>s.id).join('|');
+function simulate(stops, t0){
+  let t=toMin(t0), prev=HOME, drive=0, warn=0, pen=0, longest={m:0}, meals=0;
+  const arrs=[];
+  stops.forEach((s,i)=>{
+    const x=POOL[s.id], tr=travel(prev,x), arr=t+tr.m, dep=arr+s.stay, k=kindOf(x);
+    drive+=tr.m; if(tr.m>longest.m) longest={m:tr.m, a:prev.n, b:x.n};
+    if(hoursCheck(x,arr,dep)) warn++;
+    const out=(lo,hi)=>arr<lo?lo-arr:arr>hi?arr-hi:0;
+    if(k==='meal'){ meals++; pen+= meals===1 ? out(toMin('11:00'),toMin('13:30')) : out(toMin('17:00'),toMin('19:45')); }
+    if(k==='sweet') pen+=out(toMin('13:30'),toMin('17:00'));
+    if(k==='breakfast') pen+=out(toMin('07:00'),toMin('10:30'));
+    if(k==='bar'){ pen+=out(toMin('18:30'),toMin('22:00')); if(i!==stops.length-1) pen+=120; }
+    arrs.push(arr); t=dep; prev=x;
+  });
+  const back=travel(prev,HOME); drive+=back.m;
+  if(back.m>longest.m) longest={m:back.m, a:prev.n, b:'竹科'};
+  return {drive, warn, pen, longest, end:t+back.m, cost: drive + warn*45 + pen*1.5};
+}
+function optimize(stops, t0){
+  let best=stops.map(s=>({...s})), bc=simulate(best,t0).cost;
+  const tryOrder=o=>{ const c=simulate(o,t0).cost; if(c<bc-0.01){ best=o; bc=c; return true; } return false; };
+  // 起點也試一下「由近到遠」的排法
+  const nn=[]; let left=stops.map(s=>({...s})), cur=HOME;
+  while(left.length){ let k=0,bd=1e9; left.forEach((s,j)=>{ const d=km(cur,POOL[s.id]); if(d<bd){bd=d;k=j;} }); const s=left.splice(k,1)[0]; nn.push(s); cur=POOL[s.id]; }
+  tryOrder(nn);
+  let improved=true, guard=0;
+  while(improved && guard++<200){
+    improved=false; const n=best.length;
+    for(let i=0;i<n && !improved;i++) for(let j=0;j<n && !improved;j++){
+      if(i===j) continue;
+      const o=best.slice(); const [m]=o.splice(i,1); o.splice(j,0,m);
+      if(tryOrder(o)) improved=true;
+    }
+    for(let i=0;i<n-1 && !improved;i++) for(let j=i+1;j<n && !improved;j++){
+      const o=best.slice(0,i).concat(best.slice(i,j+1).reverse(), best.slice(j+1));
+      if(tryOrder(o)) improved=true;
+    }
+  }
+  return best;
+}
+let lastOpt=null;
+function renderRouteCheck(){
+  const box=document.getElementById('routeCheck'); if(!box) return;
+  if(!plan.stops.length){ box.innerHTML='<p>行程還是空的，先到「行程」或「口袋名單」加點。</p>'; return; }
+  const cur=simulate(plan.stops, plan.t);
+  const opt=optimize(plan.stops, plan.t), o=simulate(opt, plan.t);
+  const same=opt.every((s,i)=>s.id===plan.stops[i].id);
+  lastOpt=same?null:opt;
+  const ratio=o.drive? cur.drive/o.drive : 1;
+  const verdict = same || cur.cost-o.cost<5 ? ['順','路線已經很順，不需要調整','ok'] : ratio<=1.15 && cur.warn<=o.warn ? ['還可以','可以小調一下，省一點車程','mid'] : ['有繞路','建議換成下面比較順的順序','bad'];
+  const geo=roadCache[routeKey()];
+  box.innerHTML=`
+    <div class="rc-head"><span class="rc-v ${verdict[2]}">${verdict[0]}</span><p>${verdict[1]}</p></div>
+    <div class="rc-stats">
+      <div><b>${cur.drive}</b> 分<small>總開車（估）</small></div>
+      <div><b>${plan.stops.length}</b> 站<small>${plan.t} 出發・${fmt(cur.end)} 回竹科</small></div>
+      <div><b>${cur.longest.m}</b> 分<small>最長一段：${esc(cur.longest.a)} → ${esc(cur.longest.b)}</small></div>
+      <div><b>${cur.warn}</b> 個<small>營業時間對不上</small></div>
+    </div>
+    ${geo&&geo.km?`<p class="rc-road">實際道路：約 ${geo.km} 公里・${geo.min} 分（OpenStreetMap 路線，不含塞車）</p>`:''}
+    <div class="pk-act">
+      <button type="button" class="pbtn" id="roadBtn">${geo&&geo.coords?'✓ 已畫出實際道路':'畫出實際道路路線'}</button>
+      ${lastOpt?'':'<span class="rc-ok">目前順序就是最順的</span>'}
+    </div>
+    ${lastOpt?`<div class="rc-opt">
+      <h4>比較順的順序（開車少 ${cur.drive-o.drive} 分${o.warn<cur.warn?`、營業時間問題少 ${cur.warn-o.warn} 個`:''}）</h4>
+      <ol>${lastOpt.map((s,i)=>{ const moved=plan.stops[i].id!==s.id; return `<li class="${moved?'mv':''}">${esc(POOL[s.id].n)}${moved?' <em>換位</em>':''}</li>`; }).join('')}</ol>
+      <p class="rc-note">吃飯會盡量排在 11:00–13:30、17:00–19:45，小酒館放最後；一樣的點，只換順序。</p>
+      <div class="pk-act"><button type="button" class="pbtn" id="applyOpt">套用比較順的路線</button><button type="button" class="pbtn ghost" id="previewOpt">在地圖上預覽</button></div>
+    </div>`:''}`;
+}
+function previewOpt(){
+  if(!lmap || !lastOpt) return;
+  const pts=[[HOME.lat,HOME.lng], ...lastOpt.map(s=>[POOL[s.id].lat,POOL[s.id].lng]), [HOME.lat,HOME.lng]];
+  L.polyline(pts,{color:'#3E3A39',weight:7,opacity:.85,dashArray:'2 10',lineCap:'round'}).addTo(layer).bindTooltip('比較順的路線（預覽）',{sticky:true});
+  L.polyline(pts,{color:'#B9DAA5',weight:4,dashArray:'2 10',lineCap:'round'}).addTo(layer);
+  live.textContent='綠色點線是比較順的路線預覽';
+}
+async function fetchRoad(){
+  const key=routeKey(); if(roadCache[key]&&roadCache[key].coords) return;
+  const pts=[HOME, ...plan.stops.map(s=>POOL[s.id]), HOME];
+  const url='https://router.project-osrm.org/route/v1/driving/'+pts.map(p=>`${p.lng.toFixed(5)},${p.lat.toFixed(5)}`).join(';')+'?overview=full&geometries=geojson';
+  const btn=document.getElementById('roadBtn'); if(btn){ btn.disabled=true; btn.textContent='道路路線計算中…'; }
+  try{
+    const r=await fetch(url); const j=await r.json();
+    if(j.code!=='Ok') throw new Error(j.code);
+    const rt=j.routes[0];
+    roadCache[key]={coords:rt.geometry.coordinates.map(([a,b])=>[b,a]), km:(rt.distance/1000).toFixed(0), min:Math.round(rt.duration/60)};
+    live.textContent='已畫出實際道路路線';
+  }catch(e){
+    roadCache[key]={fail:true};
+    live.textContent='道路路線服務暫時連不上，先用直線示意；導航請用下方 Google 地圖按鈕';
+  }
+  fitted=false; drawMap(); renderRouteCheck();
+}
+function showRoute(){
+  document.getElementById('route').scrollIntoView({behavior: reduce.matches?'auto':'smooth'});
+  renderRouteCheck(); fitted=false; drawMap(); fetchRoad();
+}
+document.getElementById('routeCheck').addEventListener('click', e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  if(b.id==='roadBtn'){ fetchRoad(); }
+  if(b.id==='previewOpt'){ previewOpt(); }
+  if(b.id==='applyOpt' && lastOpt){ plan.stops=lastOpt; plan.auto=false; fitted=false; changed('已套用比較順的路線', true); fetchRoad(); }
+});
+
 window.addEventListener('load', function(){
   const box=document.getElementById('realMap');
   if(!window.L){ box.innerHTML='<p class="fail">地圖載入失敗，請直接用下方的 Google 地圖導航按鈕。</p>'; return; }
@@ -986,7 +1132,7 @@ function toggleFromMap(id){
   el.addEventListener('keydown',e=>{ if(e.key!=='Enter'&&e.key!==' ') return; const g=e.target.closest('.sm-lab'); if(!g) return; e.preventDefault(); const id=g.dataset.id; toggleFromMap(id); const again=document.querySelector(`.sm-lab[data-id="${id}"]`); if(again) again.focus(); });
 });
 
-renderDay(false); renderPocket(false); renderNav(); renderSched(); renderSpotMap();
+renderDay(false); renderPocket(false); renderNav(); renderSched(); renderSpotMap(); renderRouteCheck();
 
 /* ---------- 待辦清單 ---------- */
 const TODO = [
